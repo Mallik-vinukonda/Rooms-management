@@ -70,6 +70,7 @@ CREATE TABLE rooms (
   last_cleaned_at TIMESTAMPTZ,
   last_cleaned_by TEXT,
   notes TEXT DEFAULT '',
+  is_accommodation BOOLEAN NOT NULL DEFAULT true,
   map_position JSONB NOT NULL DEFAULT '{}'::jsonb,
   display_order INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

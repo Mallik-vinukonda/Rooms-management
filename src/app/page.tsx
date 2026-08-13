@@ -1,69 +1,99 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useCallback } from 'react';
+import Sidebar from '@/components/layout/Sidebar';
+import Header from '@/components/layout/Header';
+import DashboardStatsCards, { AttentionAlerts } from '@/components/dashboard/DashboardStats';
+import DashboardFilters from '@/components/dashboard/DashboardFilters';
+import Legend from '@/components/dashboard/Legend';
+import RoomMap from '@/components/rooms/RoomMap';
+import RoomDetailsDrawer from '@/components/rooms/RoomDetailsDrawer';
+import { DEMO_ROOMS, calculateDemoStats } from '@/lib/demo-data';
+import type { RoomWithOccupancy } from '@/types';
+
+export default function DashboardPage() {
+  const [rooms, setRooms] = useState<RoomWithOccupancy[]>(DEMO_ROOMS);
+  const [selectedRoom, setSelectedRoom] = useState<RoomWithOccupancy | null>(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const stats = calculateDemoStats();
+
+  // Recalculate stats from current room state
+  const accommodationRooms = rooms.filter(r => r.is_accommodation);
+  const currentStats = {
+    ...stats,
+    available: accommodationRooms.filter(r => r.status === 'vacant').length,
+    occupied: accommodationRooms.filter(r => r.status === 'occupied').length,
+    partially_occupied: accommodationRooms.filter(r => r.status === 'partially_occupied').length,
+    reserved: accommodationRooms.filter(r => r.status === 'reserved').length,
+    under_maintenance: accommodationRooms.filter(r => r.status === 'under_maintenance').length,
+    cleaning_required: accommodationRooms.filter(r => r.cleaning_status === 'cleaning_required').length,
+    non_functioning: accommodationRooms.filter(r => r.status === 'non_functioning').length,
+    ac_working: accommodationRooms.filter(r => r.has_ac && r.ac_status === 'working').length,
+    total_ac_rooms: accommodationRooms.filter(r => r.has_ac).length,
+    total_occupants: accommodationRooms.reduce((sum, r) => sum + r.current_occupancy, 0),
+    total_capacity: accommodationRooms.reduce((sum, r) => sum + r.capacity, 0),
+  };
+
+  const handleRoomClick = useCallback((room: RoomWithOccupancy) => {
+    setSelectedRoom(room);
+  }, []);
+
+  const handleUpdateRoom = useCallback((roomId: string, updates: Partial<RoomWithOccupancy>) => {
+    setRooms(prev => prev.map(r => {
+      if (r.id === roomId) {
+        const updated = { ...r, ...updates };
+        // If this is the selected room, update it too
+        setSelectedRoom(current => current?.id === roomId ? updated : current);
+        return updated;
+      }
+      return r;
+    }));
+  }, []);
+
+  const handleFilterClick = useCallback((filter: string) => {
+    setStatusFilter(filter);
+  }, []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+    <div className="flex min-h-screen bg-stone-50">
+      <Sidebar />
+
+      <div className="flex-1 flex flex-col min-w-0">
+        <Header rooms={rooms} onRoomSelect={handleRoomClick} />
+
+        <main className="flex-1 p-4 md:p-6 space-y-5 overflow-auto">
+          {/* Stats Cards */}
+          <DashboardStatsCards stats={currentStats} onFilterClick={handleFilterClick} />
+
+          {/* Attention Alerts */}
+          <AttentionAlerts stats={currentStats} rooms={rooms} />
+
+          {/* Filters */}
+          <div className="space-y-3">
+            <DashboardFilters activeFilter={statusFilter} onFilterChange={setStatusFilter} />
+            <Legend />
+          </div>
+
+          {/* Property Map */}
+          <div className="bg-white border border-gray-200 rounded-xl p-4 md:p-6">
+            <RoomMap
+              rooms={rooms}
+              onRoomClick={handleRoomClick}
+              statusFilter={statusFilter}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+          </div>
+        </main>
+      </div>
+
+      {/* Room Details Drawer */}
+      {selectedRoom && (
+        <RoomDetailsDrawer
+          room={selectedRoom}
+          onClose={() => setSelectedRoom(null)}
+          onUpdateRoom={handleUpdateRoom}
+        />
+      )}
     </div>
   );
 }
