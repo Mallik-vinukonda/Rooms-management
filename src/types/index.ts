@@ -235,4 +235,4 @@ export interface StatusConfig {
   textColor: string;
 }
 
-export type FloorFilter = 'all' | 'ground' | 'first' | 'upper_block';
+export type FloorFilter = 'all' | 'ground' | 'first' | 'second' | 'separate_block';
