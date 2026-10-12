@@ -60,7 +60,7 @@ CREATE TABLE rooms (
   room_number INTEGER NOT NULL UNIQUE,
   room_type room_type NOT NULL DEFAULT 'non_ac',
   purpose TEXT NOT NULL DEFAULT 'Guest Room',
-  capacity INTEGER NOT NULL DEFAULT 2 CHECK (capacity > 0),
+  capacity INTEGER NOT NULL DEFAULT 2 CHECK (capacity >= 0),
   floor TEXT NOT NULL DEFAULT 'ground',
   building TEXT NOT NULL DEFAULT 'main',
   status room_status NOT NULL DEFAULT 'vacant',

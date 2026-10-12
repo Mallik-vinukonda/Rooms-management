@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
-import { DEMO_ROOMS, DEMO_MAINTENANCE } from '@/lib/demo-data';
+import { DEMO_MAINTENANCE } from '@/lib/demo-data';
+import { useRooms } from '@/context/RoomContext';
 import { maintenanceStatusLabels, formatDateTime } from '@/lib/utils';
 import { Wrench, AlertCircle, CheckCircle, Clock, ChevronDown } from 'lucide-react';
-import type { RoomWithOccupancy } from '@/types';
 
 export default function MaintenancePage() {
-  const [rooms] = useState<RoomWithOccupancy[]>(DEMO_ROOMS);
+  const { rooms } = useRooms();
 
   const roomNumberMap = new Map(rooms.map(r => [r.id, r.room_number]));
 

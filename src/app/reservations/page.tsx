@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
-import { DEMO_ROOMS, DEMO_RESERVATIONS } from '@/lib/demo-data';
+import { DEMO_RESERVATIONS } from '@/lib/demo-data';
+import { useRooms } from '@/context/RoomContext';
 import { formatDateTime } from '@/lib/utils';
 import { CalendarClock, User, Phone, BedDouble } from 'lucide-react';
 
@@ -18,7 +19,7 @@ const statusColors: Record<string, { bg: string; text: string }> = {
 };
 
 export default function ReservationsPage() {
-  const [rooms] = useState(DEMO_ROOMS);
+  const { rooms } = useRooms();
   const roomMap = new Map(rooms.map(r => [r.id, r]));
 
   return (

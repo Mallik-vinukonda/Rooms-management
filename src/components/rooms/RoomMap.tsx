@@ -28,9 +28,10 @@ export default function RoomMap({ rooms, onRoomClick, activeFilter = 'all', stat
         if (!statusFilter || statusFilter === 'all') return true;
         if (statusFilter === 'ac_issue') return r.has_ac && r.ac_status !== 'working' && r.ac_status !== 'not_applicable';
         if (statusFilter === 'cleaning_required') return r.cleaning_status === 'cleaning_required';
-        if (statusFilter === 'ac') return r.has_ac;
-        if (statusFilter === 'non_ac') return !r.has_ac;
+        if (statusFilter === 'ac') return r.has_ac && r.is_accommodation;
+        if (statusFilter === 'non_ac') return !r.has_ac && r.is_accommodation;
         if (statusFilter === 'dormitory') return r.room_type === 'dormitory';
+        if (statusFilter === 'non_accommodation') return !r.is_accommodation;
         return r.status === statusFilter;
       })
       .map(r => r.room_number)

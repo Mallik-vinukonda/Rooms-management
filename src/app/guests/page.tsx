@@ -3,12 +3,11 @@
 import { useState, useMemo } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
-import { DEMO_ROOMS } from '@/lib/demo-data';
+import { useRooms } from '@/context/RoomContext';
 import { Search, User, Phone, BedDouble } from 'lucide-react';
-import type { RoomWithOccupancy } from '@/types';
 
 export default function GuestsPage() {
-  const [rooms] = useState<RoomWithOccupancy[]>(DEMO_ROOMS);
+  const { rooms } = useRooms();
   const [searchQuery, setSearchQuery] = useState('');
 
   // Extract all current guests with their room info

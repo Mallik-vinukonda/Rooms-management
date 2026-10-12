@@ -3,29 +3,26 @@
 import { useState } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
-import { DEMO_ROOMS } from '@/lib/demo-data';
+import { useRooms } from '@/context/RoomContext';
 import { cleaningStatusConfig, formatDateTime } from '@/lib/utils';
 import { Sparkles, CheckCircle, AlertTriangle, Loader } from 'lucide-react';
 import type { RoomWithOccupancy } from '@/types';
 
 export default function HousekeepingPage() {
-  const [rooms, setRooms] = useState<RoomWithOccupancy[]>(DEMO_ROOMS);
+  const { rooms, updateRoom } = useRooms();
 
   const cleaningRequired = rooms.filter(r => r.cleaning_status === 'cleaning_required');
   const cleaningInProgress = rooms.filter(r => r.cleaning_status === 'cleaning_in_progress');
   const clean = rooms.filter(r => r.cleaning_status === 'clean');
 
   const handleToggleCleaning = (roomId: string) => {
-    setRooms(prev => prev.map(r => {
-      if (r.id === roomId) {
-        return {
-          ...r,
-          cleaning_status: r.cleaning_status === 'clean' ? 'cleaning_required' : 'clean',
-          last_cleaned_at: r.cleaning_status !== 'clean' ? new Date().toISOString() : r.last_cleaned_at,
-        };
-      }
-      return r;
-    }));
+    const room = rooms.find(r => r.id === roomId);
+    if (!room) return;
+    const isClean = room.cleaning_status === 'clean';
+    updateRoom(roomId, {
+      cleaning_status: isClean ? 'cleaning_required' : 'clean',
+      last_cleaned_at: !isClean ? new Date().toISOString() : room.last_cleaned_at,
+    });
   };
 
   const RoomCleaningCard = ({ room }: { room: RoomWithOccupancy }) => {

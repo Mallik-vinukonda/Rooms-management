@@ -8,48 +8,23 @@ import DashboardFilters from '@/components/dashboard/DashboardFilters';
 import Legend from '@/components/dashboard/Legend';
 import RoomMap from '@/components/rooms/RoomMap';
 import RoomDetailsDrawer from '@/components/rooms/RoomDetailsDrawer';
-import { DEMO_ROOMS, calculateDemoStats } from '@/lib/demo-data';
+import { useRooms } from '@/context/RoomContext';
 import type { RoomWithOccupancy } from '@/types';
 
 export default function DashboardPage() {
-  const [rooms, setRooms] = useState<RoomWithOccupancy[]>(DEMO_ROOMS);
-  const [selectedRoom, setSelectedRoom] = useState<RoomWithOccupancy | null>(null);
+  const { rooms, stats: currentStats, updateRoom } = useRooms();
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const stats = calculateDemoStats();
-
-  // Recalculate stats from current room state
-  const accommodationRooms = rooms.filter(r => r.is_accommodation);
-  const currentStats = {
-    ...stats,
-    available: accommodationRooms.filter(r => r.status === 'vacant').length,
-    occupied: accommodationRooms.filter(r => r.status === 'occupied').length,
-    partially_occupied: accommodationRooms.filter(r => r.status === 'partially_occupied').length,
-    reserved: accommodationRooms.filter(r => r.status === 'reserved').length,
-    under_maintenance: accommodationRooms.filter(r => r.status === 'under_maintenance').length,
-    cleaning_required: accommodationRooms.filter(r => r.cleaning_status === 'cleaning_required').length,
-    non_functioning: accommodationRooms.filter(r => r.status === 'non_functioning').length,
-    ac_working: accommodationRooms.filter(r => r.has_ac && r.ac_status === 'working').length,
-    total_ac_rooms: accommodationRooms.filter(r => r.has_ac).length,
-    total_occupants: accommodationRooms.reduce((sum, r) => sum + r.current_occupancy, 0),
-    total_capacity: accommodationRooms.reduce((sum, r) => sum + r.capacity, 0),
-  };
+  const selectedRoom = rooms.find(r => r.id === selectedRoomId) || null;
 
   const handleRoomClick = useCallback((room: RoomWithOccupancy) => {
-    setSelectedRoom(room);
+    setSelectedRoomId(room.id);
   }, []);
 
   const handleUpdateRoom = useCallback((roomId: string, updates: Partial<RoomWithOccupancy>) => {
-    setRooms(prev => prev.map(r => {
-      if (r.id === roomId) {
-        const updated = { ...r, ...updates };
-        // If this is the selected room, update it too
-        setSelectedRoom(current => current?.id === roomId ? updated : current);
-        return updated;
-      }
-      return r;
-    }));
-  }, []);
+    updateRoom(roomId, updates);
+  }, [updateRoom]);
 
   const handleFilterClick = useCallback((filter: string) => {
     setStatusFilter(filter);
@@ -90,7 +65,7 @@ export default function DashboardPage() {
       {selectedRoom && (
         <RoomDetailsDrawer
           room={selectedRoom}
-          onClose={() => setSelectedRoom(null)}
+          onClose={() => setSelectedRoomId(null)}
           onUpdateRoom={handleUpdateRoom}
         />
       )}

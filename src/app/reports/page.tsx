@@ -2,12 +2,11 @@
 
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
-import { DEMO_ROOMS, calculateDemoStats } from '@/lib/demo-data';
+import { useRooms } from '@/context/RoomContext';
 import { BarChart3, BedDouble, Users, Snowflake, Wrench, Sparkles, Download } from 'lucide-react';
 
 export default function ReportsPage() {
-  const rooms = DEMO_ROOMS;
-  const stats = calculateDemoStats();
+  const { rooms, stats } = useRooms();
 
   const occupancyRate = stats.total_rooms > 0
     ? Math.round(((stats.occupied + stats.partially_occupied) / stats.total_rooms) * 100)
@@ -18,16 +17,18 @@ export default function ReportsPage() {
     : 0;
 
   const handleExportCSV = () => {
-    const headers = ['Room', 'Type', 'Capacity', 'Occupancy', 'Status', 'AC', 'Cleaning', 'Guests'];
+    const headers = ['Room', 'Purpose', 'Category', 'Type', 'Capacity', 'Occupancy', 'Status', 'AC', 'Cleaning', 'Guests'];
     const rows = rooms.map(r => [
       r.room_number,
+      `"${r.purpose || 'Guest Room'}"`,
+      r.is_accommodation ? 'Accommodation' : 'Facility',
       r.room_type,
       r.capacity,
       `${r.current_occupancy}/${r.capacity}`,
       r.status,
       r.has_ac ? r.ac_status : 'N/A',
       r.cleaning_status,
-      r.current_guest_names.join('; '),
+      `"${r.current_guest_names.join('; ')}"`,
     ]);
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });

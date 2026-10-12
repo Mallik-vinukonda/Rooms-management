@@ -27,12 +27,16 @@ export default function RoomCard({ room, onClick, compact = false }: RoomCardPro
   const acConf = room.has_ac ? acStatusConfig[room.ac_status] : null;
 
   if (!room.is_accommodation) {
-    const shortPurpose = room.purpose === 'Mega Kitchen' ? 'KITCHEN' :
-                         room.purpose === 'Classroom' ? 'CLASS' :
-                         room.purpose === 'Meeting Hall' ? 'HALL' :
-                         room.purpose === 'Office' ? 'OFFICE' :
-                         room.purpose === 'Storage' ? 'STORE' :
-                         room.purpose === 'Staff Room' ? 'STAFF' : room.purpose.toUpperCase();
+    const raw = (room.purpose || '').trim();
+    const lower = raw.toLowerCase();
+    const shortPurpose =
+      lower.includes('kitchen') ? 'KITCHEN' :
+      lower.includes('class') ? 'CLASS' :
+      lower.includes('hall') ? 'HALL' :
+      lower.includes('office') ? 'OFFICE' :
+      lower.includes('store') || lower.includes('storage') ? 'STORE' :
+      lower.includes('staff') ? 'STAFF' :
+      raw.length > 8 ? raw.substring(0, 7).toUpperCase() : (raw || 'FACILITY').toUpperCase();
 
     if (compact) {
       return (
@@ -40,7 +44,7 @@ export default function RoomCard({ room, onClick, compact = false }: RoomCardPro
           onClick={() => onClick?.(room)}
           className="room-card flex flex-col gap-1 min-w-[80px] bg-stone-100/70 border-dashed border-stone-300 hover:border-stone-400"
           style={{ '--room-status-color': '#78716c' } as React.CSSProperties}
-          title={`Room ${room.room_number} — ${room.purpose}`}
+          title={`Room ${room.room_number} — ${room.purpose} (Non-Accommodation)`}
         >
           <div className="flex items-center justify-between pl-2">
             <span className="text-xs font-bold text-stone-600">{room.room_number}</span>
@@ -67,7 +71,7 @@ export default function RoomCard({ room, onClick, compact = false }: RoomCardPro
           </div>
         </div>
         <div className="flex items-center gap-2 pl-2 text-xs text-stone-500">
-          <span>Non-Accommodation</span>
+          <span>Non-Accommodation Facility</span>
         </div>
       </button>
     );
@@ -140,10 +144,17 @@ export default function RoomCard({ room, onClick, compact = false }: RoomCardPro
         onClick={() => onClick?.(room)}
         className="room-card flex flex-col gap-1 min-w-[80px]"
         style={{ '--room-status-color': statusColorVars[room.status] } as React.CSSProperties}
-        title={`Room ${room.room_number} — ${statusConf.label}`}
+        title={`Room ${room.room_number} — ${room.room_type === 'dormitory' ? 'Dormitory' : statusConf.label}`}
       >
         <div className="flex items-center justify-between pl-2">
-          <span className="text-xs font-bold text-gray-800">{room.room_number}</span>
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-bold text-gray-800">{room.room_number}</span>
+            {room.room_type === 'dormitory' && (
+              <span className="text-[9px] font-bold px-1 rounded bg-indigo-100 text-indigo-700 leading-tight">
+                DORM
+              </span>
+            )}
+          </div>
           <StatusIcon />
         </div>
         <div className="flex items-center justify-between pl-2">
@@ -167,10 +178,16 @@ export default function RoomCard({ room, onClick, compact = false }: RoomCardPro
       <div className="flex items-center justify-between pl-2">
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold text-gray-800">{room.room_number}</span>
-          <span className={`badge ${statusConf.bgColor} ${statusConf.color}`}>
-            <StatusIcon />
-            {statusConf.label}
-          </span>
+          {room.room_type === 'dormitory' ? (
+            <span className="badge bg-indigo-100 text-indigo-800 border border-indigo-200">
+              Dormitory
+            </span>
+          ) : (
+            <span className={`badge ${statusConf.bgColor} ${statusConf.color}`}>
+              <StatusIcon />
+              {statusConf.label}
+            </span>
+          )}
         </div>
       </div>
 

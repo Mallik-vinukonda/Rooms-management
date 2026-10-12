@@ -7,7 +7,7 @@ interface DashboardFiltersProps {
 
 export default function DashboardFilters({ activeFilter, onFilterChange }: DashboardFiltersProps) {
   const filters = [
-    { id: 'all', label: 'All Rooms' },
+    { id: 'all', label: 'All Spaces' },
     { id: 'vacant', label: 'Vacant' },
     { id: 'occupied', label: 'Occupied' },
     { id: 'partially_occupied', label: 'Partial' },
@@ -18,6 +18,7 @@ export default function DashboardFilters({ activeFilter, onFilterChange }: Dashb
     { id: 'ac', label: 'AC Rooms' },
     { id: 'non_ac', label: 'Non-AC' },
     { id: 'dormitory', label: 'Dormitory' },
+    { id: 'non_accommodation', label: 'Facilities (Store/Office/etc.)' },
     { id: 'non_functioning', label: 'Non-Function.' },
   ];
 

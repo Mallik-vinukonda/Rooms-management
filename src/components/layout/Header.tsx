@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Search, Bell, User, AlertTriangle, X } from 'lucide-react';
+import Link from 'next/link';
+import { Search, Bell, User, AlertTriangle, X, Database } from 'lucide-react';
+import { useRooms } from '@/context/RoomContext';
 import type { RoomWithOccupancy } from '@/types';
 
 interface HeaderProps {
@@ -10,6 +12,7 @@ interface HeaderProps {
 }
 
 export default function Header({ rooms, onRoomSelect }: HeaderProps) {
+  const { syncStatus } = useRooms();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<RoomWithOccupancy[]>([]);
@@ -136,10 +139,14 @@ export default function Header({ rooms, onRoomSelect }: HeaderProps) {
                   <div className="min-w-0">
                     <div className="text-sm font-medium">Room {room.room_number}</div>
                     <div className="text-xs text-gray-500 truncate">
-                      {room.room_type === 'ac' ? 'AC' : room.room_type === 'non_ac' ? 'Non-AC' : room.room_type === 'dormitory' ? 'Dormitory' : room.room_type}
-                      {' · '}
-                      {room.current_occupancy}/{room.capacity} occupied
-                      {room.current_guest_names.length > 0 && ` · ${room.current_guest_names.join(', ')}`}
+                      {room.is_accommodation ? (
+                        <>
+                          {room.room_type === 'dormitory' ? 'Dormitory' : room.room_type.toUpperCase()} · {room.current_occupancy}/{room.capacity} occupied
+                          {room.current_guest_names.length > 0 && ` · ${room.current_guest_names.join(', ')}`}
+                        </>
+                      ) : (
+                        <span className="text-stone-600 font-medium">Facility · {room.purpose}</span>
+                      )}
                     </div>
                   </div>
                 </button>
@@ -176,6 +183,29 @@ export default function Header({ rooms, onRoomSelect }: HeaderProps) {
               </span>
             )}
           </button>
+
+          {/* Database / Sync Status */}
+          <Link
+            href="/settings"
+            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${
+              syncStatus === 'supabase_connected'
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+            }`}
+            title={
+              syncStatus === 'supabase_connected'
+                ? 'Connected to Supabase live database'
+                : 'Using Persistent Local Storage. Click to view Supabase connection setup'
+            }
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                syncStatus === 'supabase_connected' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+              }`}
+            />
+            <Database size={12} />
+            <span>{syncStatus === 'supabase_connected' ? 'Supabase Live' : 'Local Store'}</span>
+          </Link>
 
           {/* User */}
           <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 text-gray-600">

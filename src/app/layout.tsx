@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { RoomProvider } from "@/context/RoomContext";
 
 export const metadata: Metadata = {
   title: "Sri Villa Guest House — Room Management",
@@ -21,7 +22,9 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
-        {children}
+        <RoomProvider>
+          {children}
+        </RoomProvider>
       </body>
     </html>
   );
