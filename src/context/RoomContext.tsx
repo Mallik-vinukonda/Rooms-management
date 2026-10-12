@@ -2,8 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { RoomWithOccupancy, DashboardStats } from '@/types';
-import { DEMO_ROOMS, calculateDemoStats } from '@/lib/demo-data';
-import { createClient } from '@/lib/supabase/client';
+import { DEMO_ROOMS } from '@/lib/demo-data';
 
 export type SyncStatus = 'checking' | 'supabase_connected' | 'local_storage';
 
@@ -28,19 +27,17 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('checking');
   const [supabaseError, setSupabaseError] = useState<string | null>(null);
 
-  // Initialize data: check localStorage first, then verify Supabase
+  // Initialize data: check localStorage cache, then sync from /api/rooms
   const initData = useCallback(async () => {
     setIsLoading(true);
-    let initialRooms: RoomWithOccupancy[] = DEMO_ROOMS;
 
-    // 1. Check local storage
+    // 1. Initial cached data from localStorage for zero-latency load
     if (typeof window !== 'undefined') {
       try {
         const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            initialRooms = parsed;
             setRooms(parsed);
           }
         }
@@ -49,64 +46,26 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // 2. Try Supabase
+    // 2. Fetch live data from /api/rooms (connected to Supabase)
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase.from('rooms').select('*').order('room_number', { ascending: true });
+      const res = await fetch('/api/rooms', { cache: 'no-store' });
+      const json = await res.json();
 
-      if (error) {
-        console.info('Supabase rooms table not ready, using persistent local storage mode:', error.message);
-        setSupabaseError(error.message);
-        setSyncStatus('local_storage');
-        // Ensure localStorage has the rooms
-        if (typeof window !== 'undefined' && !localStorage.getItem(LOCAL_STORAGE_KEY)) {
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initialRooms));
-        }
-      } else if (data && data.length > 0) {
-        // Successfully connected to Supabase and fetched rooms!
-        // Merge Supabase room fields with in-memory occupancy/guest mappings
-        const merged: RoomWithOccupancy[] = data.map((dbRoom) => {
-          const localMatch = initialRooms.find(r => r.room_number === dbRoom.room_number);
-          return {
-            id: dbRoom.id || `room-${dbRoom.room_number}`,
-            room_number: dbRoom.room_number,
-            room_type: dbRoom.room_type || 'non_ac',
-            purpose: dbRoom.purpose || 'Guest Room',
-            capacity: dbRoom.capacity ?? 2,
-            floor: dbRoom.floor || 'ground',
-            building: dbRoom.building || 'main_wing_a',
-            status: dbRoom.status || 'vacant',
-            has_ac: dbRoom.has_ac ?? false,
-            ac_status: dbRoom.ac_status || 'not_applicable',
-            cleaning_status: dbRoom.cleaning_status || 'clean',
-            last_cleaned_at: dbRoom.last_cleaned_at || null,
-            last_cleaned_by: dbRoom.last_cleaned_by || null,
-            notes: dbRoom.notes || '',
-            is_accommodation: dbRoom.is_accommodation ?? true,
-            map_position: dbRoom.map_position || (localMatch?.map_position ?? { row: 0, col: 0, section: 'wing_a' }),
-            display_order: dbRoom.display_order ?? dbRoom.room_number,
-            created_at: dbRoom.created_at || new Date().toISOString(),
-            updated_at: dbRoom.updated_at || new Date().toISOString(),
-            current_occupancy: localMatch?.current_occupancy ?? 0,
-            current_guest_names: localMatch?.current_guest_names ?? [],
-            active_stays: localMatch?.active_stays ?? [],
-          };
-        });
-
-        setRooms(merged);
+      if (json.success && Array.isArray(json.rooms) && json.rooms.length > 0) {
+        setRooms(json.rooms);
         setSyncStatus('supabase_connected');
         setSupabaseError(null);
         if (typeof window !== 'undefined') {
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(merged));
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(json.rooms));
         }
       } else {
-        // Table exists but is empty
-        setSyncStatus('supabase_connected');
-        setSupabaseError('Supabase table "rooms" exists but has 0 records. Run seed.sql to populate.');
+        const msg = json.error || 'No rooms found in Supabase database';
+        setSupabaseError(msg);
+        setSyncStatus('local_storage');
       }
     } catch (err: any) {
-      console.warn('Supabase initialization check error:', err);
-      setSupabaseError(err?.message || 'Could not connect to Supabase');
+      console.warn('Could not fetch from /api/rooms, using local storage mode:', err);
+      setSupabaseError(err?.message || 'Could not connect to Supabase server');
       setSyncStatus('local_storage');
     } finally {
       setIsLoading(false);
@@ -117,18 +76,18 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
     initData();
   }, [initData]);
 
-  // Update room function: optimistic update, persists to localStorage, syncs to Supabase if connected
+  // Update room function: optimistic local update + persistent storage + live Supabase sync
   const updateRoom = useCallback(async (roomId: string, updates: Partial<RoomWithOccupancy>) => {
-    setRooms(prev => {
-      const next = prev.map(r => {
+    // 1. Optimistic local state update
+    setRooms((prev) => {
+      const next = prev.map((r) => {
         if (r.id === roomId || r.room_number.toString() === roomId) {
-          const updated = { ...r, ...updates, updated_at: new Date().toISOString() };
-          return updated;
+          return { ...r, ...updates, updated_at: new Date().toISOString() };
         }
         return r;
       });
 
-      // Save to localStorage
+      // 2. Cache in localStorage
       if (typeof window !== 'undefined') {
         try {
           localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(next));
@@ -140,34 +99,30 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
       return next;
     });
 
-    // If Supabase is connected, sync updates
-    if (syncStatus === 'supabase_connected') {
-      try {
-        const supabase = createClient();
-        const payload: Record<string, any> = {
-          updated_at: new Date().toISOString(),
-        };
+    // 3. Sync live to Supabase via /api/rooms
+    try {
+      const currentRoom = rooms.find(
+        (r) => r.id === roomId || r.room_number.toString() === roomId
+      );
 
-        if ('room_type' in updates) payload.room_type = updates.room_type;
-        if ('purpose' in updates) payload.purpose = updates.purpose;
-        if ('capacity' in updates) payload.capacity = updates.capacity;
-        if ('status' in updates) payload.status = updates.status;
-        if ('has_ac' in updates) payload.has_ac = updates.has_ac;
-        if ('ac_status' in updates) payload.ac_status = updates.ac_status;
-        if ('cleaning_status' in updates) payload.cleaning_status = updates.cleaning_status;
-        if ('notes' in updates) payload.notes = updates.notes;
-        if ('is_accommodation' in updates) payload.is_accommodation = updates.is_accommodation;
+      const res = await fetch('/api/rooms', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: roomId,
+          room_number: currentRoom?.room_number,
+          updates,
+        }),
+      });
 
-        // Try updating by id first, or fallback to room_number
-        const currentRoom = rooms.find(r => r.id === roomId || r.room_number.toString() === roomId);
-        if (currentRoom) {
-          await supabase.from('rooms').update(payload).eq('room_number', currentRoom.room_number);
-        }
-      } catch (err) {
-        console.warn('Supabase remote sync warning (local storage succeeded):', err);
+      const resJson = await res.json();
+      if (!resJson.success) {
+        console.warn('Supabase remote sync warning:', resJson.error);
       }
+    } catch (err) {
+      console.warn('Supabase network sync error (local changes preserved):', err);
     }
-  }, [syncStatus, rooms]);
+  }, [rooms]);
 
   // Reset to default seed
   const resetRooms = useCallback(() => {
@@ -178,21 +133,21 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Compute live statistics based on accommodation-only rooms
-  const accommodationRooms = rooms.filter(r => r.is_accommodation);
-  const acRooms = accommodationRooms.filter(r => r.has_ac);
+  const accommodationRooms = rooms.filter((r) => r.is_accommodation);
+  const acRooms = accommodationRooms.filter((r) => r.has_ac);
 
   const stats: DashboardStats = {
     total_rooms: accommodationRooms.length,
-    available: accommodationRooms.filter(r => r.status === 'vacant').length,
-    occupied: accommodationRooms.filter(r => r.status === 'occupied').length,
-    partially_occupied: accommodationRooms.filter(r => r.status === 'partially_occupied').length,
-    reserved: accommodationRooms.filter(r => r.status === 'reserved').length,
-    under_maintenance: accommodationRooms.filter(r => r.status === 'under_maintenance').length,
-    cleaning_required: accommodationRooms.filter(r => r.cleaning_status === 'cleaning_required').length,
-    non_functioning: accommodationRooms.filter(r => r.status === 'non_functioning').length,
-    unavailable: accommodationRooms.filter(r => r.status === 'unavailable').length,
+    available: accommodationRooms.filter((r) => r.status === 'vacant').length,
+    occupied: accommodationRooms.filter((r) => r.status === 'occupied').length,
+    partially_occupied: accommodationRooms.filter((r) => r.status === 'partially_occupied').length,
+    reserved: accommodationRooms.filter((r) => r.status === 'reserved').length,
+    under_maintenance: accommodationRooms.filter((r) => r.status === 'under_maintenance').length,
+    cleaning_required: accommodationRooms.filter((r) => r.cleaning_status === 'cleaning_required').length,
+    non_functioning: accommodationRooms.filter((r) => r.status === 'non_functioning').length,
+    unavailable: accommodationRooms.filter((r) => r.status === 'unavailable').length,
     total_ac_rooms: acRooms.length,
-    ac_working: acRooms.filter(r => r.ac_status === 'working').length,
+    ac_working: acRooms.filter((r) => r.ac_status === 'working').length,
     total_capacity: accommodationRooms.reduce((sum, r) => sum + r.capacity, 0),
     total_occupants: accommodationRooms.reduce((sum, r) => sum + r.current_occupancy, 0),
   };
