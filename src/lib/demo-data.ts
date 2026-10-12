@@ -109,25 +109,24 @@ const d3 = '2026-08-10T04:00:00Z';
 const d4 = '2026-08-09T04:00:00Z';
 
 export const DEMO_ROOMS: RoomWithOccupancy[] = [
-  // Ground — Wing A (11–20)
-  makeRoom(11, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'occupied', building: 'main_wing_a', floor: 'ground', notes: 'Corner room with extra ventilation', map_position: { row: 0, col: 0, section: 'wing_a' }, last_cleaned_at: '2026-08-13T04:00:00Z', last_cleaned_by: 'Ramesh' },
+  // Ground — Wing A (10–20)
+  makeRoom(10, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'vacant', building: 'main_wing_a', floor: 'ground', notes: 'Ground Floor Wing A', map_position: { row: 0, col: 0, section: 'wing_a' } }),
+  makeRoom(11, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'occupied', building: 'main_wing_a', floor: 'ground', notes: 'Corner room with extra ventilation', map_position: { row: 0, col: 1, section: 'wing_a' }, last_cleaned_at: '2026-08-13T04:00:00Z', last_cleaned_by: 'Ramesh' },
     [stay('g1', 'room-11', d2), stay('g2', 'room-11', d2)]),
-  makeRoom(12, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'occupied', building: 'main_wing_a', floor: 'ground', map_position: { row: 0, col: 1, section: 'wing_a' }, last_cleaned_at: '2026-08-13T05:00:00Z', last_cleaned_by: 'Ramesh' },
+  makeRoom(12, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'occupied', building: 'main_wing_a', floor: 'ground', map_position: { row: 0, col: 2, section: 'wing_a' }, last_cleaned_at: '2026-08-13T05:00:00Z', last_cleaned_by: 'Ramesh' },
     [stay('g3', 'room-12', d1), stay('g4', 'room-12', d1)]),
-  makeRoom(13, { room_type: 'non_ac', is_accommodation: false, purpose: 'Classroom', capacity: 0, status: 'vacant', building: 'main_wing_a', floor: 'ground', map_position: { row: 0, col: 2, section: 'wing_a' } }),
-  makeRoom(14, { room_type: 'ac', has_ac: true, ac_status: 'not_working', status: 'vacant', building: 'main_wing_a', floor: 'ground', cleaning_status: 'cleaning_required', notes: 'AC remote missing', map_position: { row: 0, col: 3, section: 'wing_a' } }),
-  makeRoom(15, { room_type: 'dormitory', has_ac: true, ac_status: 'working', capacity: 8, status: 'partially_occupied', building: 'main_wing_a', floor: 'ground', notes: 'Large dormitory', map_position: { row: 0, col: 4, section: 'wing_a' } },
+  makeRoom(13, { room_type: 'non_ac', is_accommodation: false, purpose: 'Classroom', capacity: 0, status: 'vacant', building: 'main_wing_a', floor: 'ground', map_position: { row: 0, col: 3, section: 'wing_a' } }),
+  makeRoom(14, { room_type: 'ac', has_ac: true, ac_status: 'not_working', status: 'vacant', building: 'main_wing_a', floor: 'ground', cleaning_status: 'cleaning_required', notes: 'AC remote missing', map_position: { row: 0, col: 4, section: 'wing_a' } }),
+  makeRoom(15, { room_type: 'dormitory', has_ac: true, ac_status: 'working', capacity: 8, status: 'partially_occupied', building: 'main_wing_a', floor: 'ground', notes: 'Large dormitory', map_position: { row: 0, col: 5, section: 'wing_a' } },
     [stay('g5', 'room-15', d3), stay('g6', 'room-15', d3), stay('g7', 'room-15', d2), stay('g8', 'room-15', d1), stay('g9', 'room-15', d1)]),
-  makeRoom(16, { room_type: 'non_ac', is_accommodation: false, purpose: 'Mega Kitchen', capacity: 0, status: 'vacant', building: 'main_wing_a', floor: 'ground', map_position: { row: 0, col: 5, section: 'wing_a' } }),
-  makeRoom(17, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'occupied', building: 'main_wing_a', floor: 'ground', map_position: { row: 0, col: 6, section: 'wing_a' }, last_cleaned_at: '2026-08-13T02:00:00Z', last_cleaned_by: 'Ramesh' },
+  makeRoom(16, { room_type: 'non_ac', is_accommodation: false, purpose: 'Mega Kitchen', capacity: 0, status: 'vacant', building: 'main_wing_a', floor: 'ground', map_position: { row: 0, col: 6, section: 'wing_a' } }),
+  makeRoom(17, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'occupied', building: 'main_wing_a', floor: 'ground', map_position: { row: 0, col: 7, section: 'wing_a' }, last_cleaned_at: '2026-08-13T02:00:00Z', last_cleaned_by: 'Ramesh' },
     [stay('g10', 'room-17', d4), stay('g11', 'room-17', d4)]),
-  makeRoom(18, { room_type: 'ac', has_ac: true, ac_status: 'not_working', status: 'under_maintenance', building: 'main_wing_a', floor: 'ground', cleaning_status: 'cleaning_required', notes: 'AC compressor issue reported', map_position: { row: 0, col: 7, section: 'wing_a' } }),
-  makeRoom(19, { room_type: 'non_ac', is_accommodation: false, purpose: 'Office', capacity: 0, status: 'vacant', building: 'main_wing_a', floor: 'ground', map_position: { row: 0, col: 8, section: 'wing_a' } }),
-  makeRoom(20, { room_type: 'non_ac', is_accommodation: false, purpose: 'Staff Room', capacity: 0, status: 'vacant', building: 'main_wing_a', floor: 'ground', map_position: { row: 0, col: 9, section: 'wing_a' } }),
+  makeRoom(18, { room_type: 'ac', has_ac: true, ac_status: 'not_working', status: 'under_maintenance', building: 'main_wing_a', floor: 'ground', cleaning_status: 'cleaning_required', notes: 'AC compressor issue reported', map_position: { row: 0, col: 8, section: 'wing_a' } }),
+  makeRoom(19, { room_type: 'non_ac', is_accommodation: false, purpose: 'Office', capacity: 0, status: 'vacant', building: 'main_wing_a', floor: 'ground', map_position: { row: 0, col: 9, section: 'wing_a' } }),
+  makeRoom(20, { room_type: 'non_ac', is_accommodation: false, purpose: 'Staff Room', capacity: 0, status: 'vacant', building: 'main_wing_a', floor: 'ground', map_position: { row: 0, col: 10, section: 'wing_a' } }),
 
-  // Ground — Wing B (30–39)
-  makeRoom(30, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'occupied', building: 'main_wing_b', floor: 'ground', map_position: { row: 0, col: 0, section: 'wing_b' }, last_cleaned_at: '2026-08-13T05:00:00Z', last_cleaned_by: 'Suresh' },
-    [stay('g16', 'room-30', d1), stay('g17', 'room-30', d1)]),
+  // Second Floor (31–39)
   makeRoom(31, { room_type: 'non_ac', status: 'vacant', building: 'main_second', floor: 'second', map_position: { row: 1, col: 0, section: 'wing_b' } }),
   makeRoom(32, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'occupied', building: 'main_second', floor: 'second', cleaning_status: 'cleaning_required', map_position: { row: 2, col: 0, section: 'wing_b' } },
     [stay('g18', 'room-32', d2)]),
@@ -139,7 +138,7 @@ export const DEMO_ROOMS: RoomWithOccupancy[] = [
   makeRoom(38, { room_type: 'non_ac', is_accommodation: false, purpose: 'Office', capacity: 0, status: 'vacant', building: 'main_second', floor: 'second', map_position: { row: 8, col: 0, section: 'wing_b' } }),
   makeRoom(39, { room_type: 'non_ac', is_accommodation: false, purpose: 'Staff Room', capacity: 0, status: 'vacant', building: 'main_second', floor: 'second', map_position: { row: 9, col: 0, section: 'wing_b' } }),
 
-  // First Floor (21–29)
+  // First Floor (21–30)
   makeRoom(21, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'occupied', building: 'main_first', floor: 'first', map_position: { row: 0, col: 0, section: 'first_floor' }, last_cleaned_at: '2026-08-13T07:00:00Z', last_cleaned_by: 'Ramesh' },
     [stay('g12', 'room-21', d1)]),
   makeRoom(22, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'vacant', building: 'main_first', floor: 'first', cleaning_status: 'cleaning_required', map_position: { row: 0, col: 1, section: 'first_floor' } }),
@@ -152,8 +151,10 @@ export const DEMO_ROOMS: RoomWithOccupancy[] = [
   makeRoom(28, { room_type: 'ac', has_ac: true, ac_status: 'not_working', status: 'occupied', building: 'main_first', floor: 'first', notes: 'AC not cooling properly', map_position: { row: 0, col: 7, section: 'first_floor' } },
     [stay('g15', 'room-28', d3)]),
   makeRoom(29, { room_type: 'non_ac', is_accommodation: false, purpose: 'Staff Room', capacity: 0, status: 'vacant', building: 'main_first', floor: 'first', map_position: { row: 0, col: 8, section: 'first_floor' } }),
+  makeRoom(30, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'occupied', building: 'main_first', floor: 'first', map_position: { row: 0, col: 9, section: 'first_floor' }, last_cleaned_at: '2026-08-13T05:00:00Z', last_cleaned_by: 'Suresh' },
+    [stay('g16', 'room-30', d1), stay('g17', 'room-30', d1)]),
 
-  // Upper Block (40–54)
+  // Upper Block (40–53)
   makeRoom(40, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'occupied', building: 'main_first', floor: 'first', map_position: { row: 0, col: 0, side: 'left', section: 'upper_block' } },
     [stay('g19', 'room-40', d2), stay('g20', 'room-40', d1)]),
   makeRoom(41, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'vacant', building: 'separate_block', floor: 'separate_block', map_position: { row: 0, col: 1, side: 'right', section: 'upper_block' } }),
@@ -170,7 +171,6 @@ export const DEMO_ROOMS: RoomWithOccupancy[] = [
   makeRoom(51, { room_type: 'non_ac', is_accommodation: false, purpose: 'Meeting Hall', capacity: 0, status: 'vacant', building: 'separate_block', floor: 'separate_block', map_position: { row: 5, col: 1, side: 'right', section: 'upper_block' } }),
   makeRoom(52, { room_type: 'non_ac', is_accommodation: false, purpose: 'Storage', capacity: 0, status: 'vacant', building: 'separate_block', floor: 'separate_block', map_position: { row: 6, col: 0, side: 'left', section: 'upper_block' } }),
   makeRoom(53, { room_type: 'non_ac', is_accommodation: false, purpose: 'Meeting Hall', capacity: 0, status: 'vacant', building: 'separate_block', floor: 'separate_block', map_position: { row: 6, col: 1, side: 'right', section: 'upper_block' } }),
-  makeRoom(54, { room_type: 'non_ac', is_accommodation: false, purpose: 'Office', capacity: 0, status: 'vacant', building: 'separate_block', floor: 'separate_block', map_position: { row: 7, col: 0, side: 'left', section: 'upper_block' } }),
 ];
 
 // ---------- MAINTENANCE LOGS ----------

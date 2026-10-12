@@ -27,17 +27,10 @@ export const FLOOR_CONFIGS: FloorConfig[] = [
     buildings: [
       {
         id: 'main_wing_a',
-        label: 'Wing A (Rooms 11–20)',
+        label: 'Wing A (Rooms 10–20)',
         layout: 'horizontal',
-        rooms: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        gridCols: 10,
-      },
-      {
-        id: 'main_wing_b',
-        label: 'Wing B (Room 30)',
-        layout: 'vertical',
-        rooms: [30],
-        gridRows: 1,
+        rooms: [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        gridCols: 11,
       },
     ],
   },
@@ -48,10 +41,10 @@ export const FLOOR_CONFIGS: FloorConfig[] = [
     buildings: [
       {
         id: 'main_first',
-        label: 'First Floor (Rooms 21–29, 40)',
+        label: 'First Floor (Rooms 21–30, 40)',
         layout: 'horizontal',
-        rooms: [21, 22, 23, 24, 25, 26, 27, 28, 29, 40],
-        gridCols: 10,
+        rooms: [21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 40],
+        gridCols: 11,
       },
     ],
   },
@@ -76,9 +69,9 @@ export const FLOOR_CONFIGS: FloorConfig[] = [
     buildings: [
       {
         id: 'separate_block',
-        label: 'Separate Block (Rooms 41–54)',
+        label: 'Separate Block (Rooms 41–53)',
         layout: 'horizontal',
-        rooms: [41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54],
+        rooms: [41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53],
       },
     ],
   },

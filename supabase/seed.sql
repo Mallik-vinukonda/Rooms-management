@@ -1,41 +1,41 @@
 -- ============================================================
 -- Sri Villa Guest House — Seed Data
--- Realistic demo data for rooms 11–54
+-- Realistic demo data for rooms 10–53
 -- ============================================================
 -- NOTE: This is DEMO/SEED data. Replace with actual room data.
 -- ============================================================
 
 -- ============================================================
--- ROOMS (11–54) — 44 rooms total
+-- ROOMS (10–53) — 44 rooms total
 -- ============================================================
 
--- Ground Floor — Main Building Wing A (Rooms 11–20)
+-- Ground Floor — Main Building Wing A (Rooms 10–20)
 INSERT INTO rooms (room_number, room_type, purpose, capacity, floor, building, status, has_ac, ac_status, cleaning_status, notes, map_position, display_order) VALUES
-(11, 'ac',       'Guest Room', 2, 'ground', 'main_wing_a', 'occupied',           true,  'working',       'clean',              'Corner room with extra ventilation', '{"row": 0, "col": 0, "section": "wing_a"}', 1),
-(12, 'ac',       'Guest Room', 2, 'ground', 'main_wing_a', 'occupied',           true,  'working',       'clean',              '', '{"row": 0, "col": 1, "section": "wing_a"}', 2),
-(13, 'ac',       'Guest Room', 2, 'ground', 'main_wing_a', 'vacant',             true,  'working',       'clean',              '', '{"row": 0, "col": 2, "section": "wing_a"}', 3),
-(14, 'ac',       'Guest Room', 2, 'ground', 'main_wing_a', 'vacant',             true,  'not_working',   'cleaning_required',  'AC remote missing', '{"row": 0, "col": 3, "section": "wing_a"}', 4),
-(15, 'dormitory','Guest Room', 8, 'ground', 'main_wing_a', 'partially_occupied', true,  'working',       'clean',              'Large dormitory', '{"row": 0, "col": 4, "section": "wing_a"}', 5),
-(16, 'non_ac',   'Guest Room', 3, 'ground', 'main_wing_a', 'vacant',             false, 'not_applicable','clean',              '', '{"row": 0, "col": 5, "section": "wing_a"}', 6),
-(17, 'ac',       'Guest Room', 2, 'ground', 'main_wing_a', 'occupied',           true,  'working',       'clean',              '', '{"row": 0, "col": 6, "section": "wing_a"}', 7),
-(18, 'ac',       'Guest Room', 2, 'ground', 'main_wing_a', 'under_maintenance',  true,  'not_working',   'cleaning_required',  'AC compressor issue reported', '{"row": 0, "col": 7, "section": "wing_a"}', 8),
-(19, 'non_ac',   'Guest Room', 2, 'ground', 'main_wing_a', 'reserved',           false, 'not_applicable','clean',              'Reserved for VIP guest', '{"row": 0, "col": 8, "section": "wing_a"}', 9),
-(20, 'ac',       'Guest Room', 2, 'ground', 'main_wing_a', 'vacant',             true,  'working',       'clean',              'Corner room — connects to Wing B', '{"row": 0, "col": 9, "section": "wing_a"}', 10);
+(10, 'ac',       'Guest Room', 2, 'ground', 'main_wing_a', 'vacant',             true,  'working',       'clean',              'Newly added room', '{"row": 0, "col": 0, "section": "wing_a"}', 0),
+(11, 'ac',       'Guest Room', 2, 'ground', 'main_wing_a', 'occupied',           true,  'working',       'clean',              'Corner room with extra ventilation', '{"row": 0, "col": 1, "section": "wing_a"}', 1),
+(12, 'ac',       'Guest Room', 2, 'ground', 'main_wing_a', 'occupied',           true,  'working',       'clean',              '', '{"row": 0, "col": 2, "section": "wing_a"}', 2),
+(13, 'ac',       'Guest Room', 2, 'ground', 'main_wing_a', 'vacant',             true,  'working',       'clean',              '', '{"row": 0, "col": 3, "section": "wing_a"}', 3),
+(14, 'ac',       'Guest Room', 2, 'ground', 'main_wing_a', 'vacant',             true,  'not_working',   'cleaning_required',  'AC remote missing', '{"row": 0, "col": 4, "section": "wing_a"}', 4),
+(15, 'dormitory','Guest Room', 8, 'ground', 'main_wing_a', 'partially_occupied', true,  'working',       'clean',              'Large dormitory', '{"row": 0, "col": 5, "section": "wing_a"}', 5),
+(16, 'non_ac',   'Guest Room', 3, 'ground', 'main_wing_a', 'vacant',             false, 'not_applicable','clean',              '', '{"row": 0, "col": 6, "section": "wing_a"}', 6),
+(17, 'ac',       'Guest Room', 2, 'ground', 'main_wing_a', 'occupied',           true,  'working',       'clean',              '', '{"row": 0, "col": 7, "section": "wing_a"}', 7),
+(18, 'ac',       'Guest Room', 2, 'ground', 'main_wing_a', 'under_maintenance',  true,  'not_working',   'cleaning_required',  'AC compressor issue reported', '{"row": 0, "col": 8, "section": "wing_a"}', 8),
+(19, 'non_ac',   'Guest Room', 2, 'ground', 'main_wing_a', 'reserved',           false, 'not_applicable','clean',              'Reserved for VIP guest', '{"row": 0, "col": 9, "section": "wing_a"}', 9),
+(20, 'ac',       'Guest Room', 2, 'ground', 'main_wing_a', 'vacant',             true,  'working',       'clean',              'Corner room — connects to Wing B', '{"row": 0, "col": 10, "section": "wing_a"}', 10);
 
--- Ground Floor — Main Building Wing B (Rooms 30–39)
+-- Second Floor — Main Building Wing B (Rooms 31–39)
 INSERT INTO rooms (room_number, room_type, purpose, capacity, floor, building, status, has_ac, ac_status, cleaning_status, notes, map_position, display_order) VALUES
-(30, 'ac',       'Guest Room', 2, 'ground', 'main_wing_b', 'occupied',           true,  'working',       'clean',              '', '{"row": 0, "col": 0, "section": "wing_b"}', 20),
-(31, 'non_ac',   'Guest Room', 2, 'ground', 'main_wing_b', 'vacant',             false, 'not_applicable','clean',              '', '{"row": 1, "col": 0, "section": "wing_b"}', 21),
-(32, 'ac',       'Guest Room', 2, 'ground', 'main_wing_b', 'occupied',           true,  'working',       'cleaning_required',  '', '{"row": 2, "col": 0, "section": "wing_b"}', 22),
-(33, 'non_ac',   'Guest Room', 3, 'ground', 'main_wing_b', 'vacant',             false, 'not_applicable','clean',              '', '{"row": 3, "col": 0, "section": "wing_b"}', 23),
-(34, 'ac',       'Guest Room', 2, 'ground', 'main_wing_b', 'reserved',           true,  'working',       'clean',              'Reserved for group visit Aug 15', '{"row": 4, "col": 0, "section": "wing_b"}', 24),
-(35, 'dormitory','Guest Room', 6, 'ground', 'main_wing_b', 'partially_occupied', true,  'working',       'clean',              '', '{"row": 5, "col": 0, "section": "wing_b"}', 25),
-(36, 'non_ac',   'Guest Room', 2, 'ground', 'main_wing_b', 'under_maintenance',  false, 'not_applicable','cleaning_required',  'Window needs repair', '{"row": 6, "col": 0, "section": "wing_b"}', 26),
-(37, 'ac',       'Guest Room', 2, 'ground', 'main_wing_b', 'vacant',             true,  'under_repair',  'clean',              'AC making noise', '{"row": 7, "col": 0, "section": "wing_b"}', 27),
-(38, 'non_ac',   'Guest Room', 2, 'ground', 'main_wing_b', 'occupied',           false, 'not_applicable','clean',              '', '{"row": 8, "col": 0, "section": "wing_b"}', 28),
-(39, 'ac',       'Guest Room', 2, 'ground', 'main_wing_b', 'vacant',             true,  'working',       'clean',              '', '{"row": 9, "col": 0, "section": "wing_b"}', 29);
+(31, 'non_ac',   'Guest Room', 2, 'second', 'main_second', 'vacant',             false, 'not_applicable','clean',              '', '{"row": 1, "col": 0, "section": "wing_b"}', 21),
+(32, 'ac',       'Guest Room', 2, 'second', 'main_second', 'occupied',           true,  'working',       'cleaning_required',  '', '{"row": 2, "col": 0, "section": "wing_b"}', 22),
+(33, 'non_ac',   'Guest Room', 3, 'second', 'main_second', 'vacant',             false, 'not_applicable','clean',              '', '{"row": 3, "col": 0, "section": "wing_b"}', 23),
+(34, 'ac',       'Guest Room', 2, 'second', 'main_second', 'reserved',           true,  'working',       'clean',              'Reserved for group visit Aug 15', '{"row": 4, "col": 0, "section": "wing_b"}', 24),
+(35, 'dormitory','Guest Room', 6, 'second', 'main_second', 'partially_occupied', true,  'working',       'clean',              '', '{"row": 5, "col": 0, "section": "wing_b"}', 25),
+(36, 'non_ac',   'Guest Room', 2, 'second', 'main_second', 'under_maintenance',  false, 'not_applicable','cleaning_required',  'Window needs repair', '{"row": 6, "col": 0, "section": "wing_b"}', 26),
+(37, 'ac',       'Guest Room', 2, 'second', 'main_second', 'vacant',             true,  'under_repair',  'clean',              'AC making noise', '{"row": 7, "col": 0, "section": "wing_b"}', 27),
+(38, 'non_ac',   'Guest Room', 2, 'second', 'main_second', 'occupied',           false, 'not_applicable','clean',              '', '{"row": 8, "col": 0, "section": "wing_b"}', 28),
+(39, 'ac',       'Guest Room', 2, 'second', 'main_second', 'vacant',             true,  'working',       'clean',              '', '{"row": 9, "col": 0, "section": "wing_b"}', 29);
 
--- First Floor — Main Building (Rooms 21–29)
+-- First Floor — Main Building (Rooms 21–30)
 INSERT INTO rooms (room_number, room_type, purpose, capacity, floor, building, status, has_ac, ac_status, cleaning_status, notes, map_position, display_order) VALUES
 (21, 'ac',       'Guest Room', 2, 'first',  'main_first',  'occupied',           true,  'working',       'clean',              '', '{"row": 0, "col": 0, "section": "first_floor"}', 11),
 (22, 'ac',       'Guest Room', 2, 'first',  'main_first',  'vacant',             true,  'working',       'cleaning_required',  '', '{"row": 0, "col": 1, "section": "first_floor"}', 12),
@@ -45,25 +45,25 @@ INSERT INTO rooms (room_number, room_type, purpose, capacity, floor, building, s
 (26, 'ac',       'Guest Room', 2, 'first',  'main_first',  'reserved',           true,  'working',       'clean',              'Reserved for temple event', '{"row": 0, "col": 5, "section": "first_floor"}', 16),
 (27, 'non_ac',   'Guest Room', 2, 'first',  'main_first',  'vacant',             false, 'not_applicable','clean',              '', '{"row": 0, "col": 6, "section": "first_floor"}', 17),
 (28, 'ac',       'Guest Room', 2, 'first',  'main_first',  'occupied',           true,  'not_working',   'clean',              'AC not cooling properly', '{"row": 0, "col": 7, "section": "first_floor"}', 18),
-(29, 'non_ac',   'Guest Room', 2, 'first',  'main_first',  'vacant',             false, 'not_applicable','cleaning_required',  '', '{"row": 0, "col": 8, "section": "first_floor"}', 19);
+(29, 'non_ac',   'Guest Room', 2, 'first',  'main_first',  'vacant',             false, 'not_applicable','cleaning_required',  '', '{"row": 0, "col": 8, "section": "first_floor"}', 19),
+(30, 'ac',       'Guest Room', 2, 'first',  'main_first',  'occupied',           true,  'working',       'clean',              '', '{"row": 0, "col": 9, "section": "first_floor"}', 20);
 
--- Upper Block (Rooms 40–54) — Corridor layout
+-- Upper Block (Rooms 40–53) — Corridor layout
 INSERT INTO rooms (room_number, room_type, purpose, capacity, floor, building, status, has_ac, ac_status, cleaning_status, notes, map_position, display_order) VALUES
-(40, 'ac',       'Guest Room', 2, 'ground', 'upper_block', 'occupied',            true,  'working',       'clean',              '', '{"row": 0, "col": 0, "side": "left", "section": "upper_block"}', 30),
-(41, 'ac',       'Guest Room', 2, 'ground', 'upper_block', 'vacant',              true,  'working',       'clean',              '', '{"row": 0, "col": 1, "side": "right", "section": "upper_block"}', 31),
-(42, 'non_ac',   'Guest Room', 2, 'ground', 'upper_block', 'occupied',            false, 'not_applicable','clean',              '', '{"row": 1, "col": 0, "side": "left", "section": "upper_block"}', 32),
-(43, 'ac',       'Guest Room', 2, 'ground', 'upper_block', 'vacant',              true,  'working',       'cleaning_required',  '', '{"row": 1, "col": 1, "side": "right", "section": "upper_block"}', 33),
-(44, 'ac',       'Guest Room', 2, 'ground', 'upper_block', 'reserved',            true,  'working',       'clean',              '', '{"row": 2, "col": 0, "side": "left", "section": "upper_block"}', 34),
-(45, 'non_ac',   'Guest Room', 3, 'ground', 'upper_block', 'vacant',              false, 'not_applicable','clean',              '', '{"row": 2, "col": 1, "side": "right", "section": "upper_block"}', 35),
-(46, 'ac',       'Guest Room', 2, 'ground', 'upper_block', 'occupied',            true,  'working',       'clean',              '', '{"row": 3, "col": 0, "side": "left", "section": "upper_block"}', 36),
-(47, 'ac',       'Guest Room', 2, 'ground', 'upper_block', 'under_maintenance',   true,  'not_working',   'cleaning_required',  'Plumbing issue', '{"row": 3, "col": 1, "side": "right", "section": "upper_block"}', 37),
-(48, 'dormitory','Guest Room', 6, 'ground', 'upper_block', 'partially_occupied',  false, 'not_applicable','clean',              '', '{"row": 4, "col": 0, "side": "left", "section": "upper_block"}', 38),
-(49, 'non_ac',   'Guest Room', 2, 'ground', 'upper_block', 'vacant',              false, 'not_applicable','clean',              '', '{"row": 4, "col": 1, "side": "right", "section": "upper_block"}', 39),
-(50, 'ac',       'Guest Room', 2, 'ground', 'upper_block', 'occupied',            true,  'working',       'clean',              '', '{"row": 5, "col": 0, "side": "left", "section": "upper_block"}', 40),
-(51, 'ac',       'Guest Room', 2, 'ground', 'upper_block', 'vacant',              true,  'working',       'clean',              '', '{"row": 5, "col": 1, "side": "right", "section": "upper_block"}', 41),
-(52, 'non_ac',   'Guest Room', 2, 'ground', 'upper_block', 'non_functioning',     false, 'not_applicable','cleaning_required',  'Needs full renovation', '{"row": 6, "col": 0, "side": "left", "section": "upper_block"}', 42),
-(53, 'ac',       'Guest Room', 2, 'ground', 'upper_block', 'vacant',              true,  'under_repair',  'clean',              'AC unit being replaced', '{"row": 6, "col": 1, "side": "right", "section": "upper_block"}', 43),
-(54, 'non_ac',   'Office',     1, 'ground', 'upper_block', 'unavailable',         false, 'not_applicable','clean',              'Used as storage/office', '{"row": 7, "col": 0, "side": "left", "section": "upper_block"}', 44);
+(40, 'ac',       'Guest Room', 2, 'first',  'main_first',  'occupied',            true,  'working',       'clean',              '', '{"row": 0, "col": 0, "side": "left", "section": "upper_block"}', 30),
+(41, 'ac',       'Guest Room', 2, 'separate_block', 'separate_block', 'vacant',   true,  'working',       'clean',              '', '{"row": 0, "col": 1, "side": "right", "section": "upper_block"}', 31),
+(42, 'non_ac',   'Guest Room', 2, 'separate_block', 'separate_block', 'occupied', false, 'not_applicable','clean',              '', '{"row": 1, "col": 0, "side": "left", "section": "upper_block"}', 32),
+(43, 'ac',       'Guest Room', 2, 'separate_block', 'separate_block', 'vacant',   true,  'working',       'cleaning_required',  '', '{"row": 1, "col": 1, "side": "right", "section": "upper_block"}', 33),
+(44, 'ac',       'Guest Room', 2, 'separate_block', 'separate_block', 'reserved', true,  'working',       'clean',              '', '{"row": 2, "col": 0, "side": "left", "section": "upper_block"}', 34),
+(45, 'non_ac',   'Guest Room', 3, 'separate_block', 'separate_block', 'vacant',   false, 'not_applicable','clean',              '', '{"row": 2, "col": 1, "side": "right", "section": "upper_block"}', 35),
+(46, 'ac',       'Guest Room', 2, 'separate_block', 'separate_block', 'occupied', true,  'working',       'clean',              '', '{"row": 3, "col": 0, "side": "left", "section": "upper_block"}', 36),
+(47, 'ac',       'Guest Room', 2, 'separate_block', 'separate_block', 'under_maintenance', true, 'not_working', 'cleaning_required', 'Plumbing issue', '{"row": 3, "col": 1, "side": "right", "section": "upper_block"}', 37),
+(48, 'dormitory','Guest Room', 6, 'separate_block', 'separate_block', 'partially_occupied', false, 'not_applicable','clean',  '', '{"row": 4, "col": 0, "side": "left", "section": "upper_block"}', 38),
+(49, 'non_ac',   'Guest Room', 2, 'separate_block', 'separate_block', 'vacant',   false, 'not_applicable','clean',              '', '{"row": 4, "col": 1, "side": "right", "section": "upper_block"}', 39),
+(50, 'ac',       'Guest Room', 2, 'separate_block', 'separate_block', 'occupied', true,  'working',       'clean',              '', '{"row": 5, "col": 0, "side": "left", "section": "upper_block"}', 40),
+(51, 'ac',       'Guest Room', 2, 'separate_block', 'separate_block', 'vacant',   true,  'working',       'clean',              '', '{"row": 5, "col": 1, "side": "right", "section": "upper_block"}', 41),
+(52, 'non_ac',   'Guest Room', 2, 'separate_block', 'separate_block', 'non_functioning', false, 'not_applicable','cleaning_required', 'Needs full renovation', '{"row": 6, "col": 0, "side": "left", "section": "upper_block"}', 42),
+(53, 'ac',       'Guest Room', 2, 'separate_block', 'separate_block', 'vacant',   true,  'under_repair',  'clean',              'AC unit being replaced', '{"row": 6, "col": 1, "side": "right", "section": "upper_block"}', 43);
 
 -- ============================================================
 -- DEMO GUESTS
