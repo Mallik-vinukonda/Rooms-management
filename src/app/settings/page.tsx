@@ -24,7 +24,7 @@ export default function SettingsPage() {
   const [testingConnection, setTestingConnection] = useState(false);
   const [resetDone, setResetDone] = useState(false);
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://iwqbcfoqxferysuiwmeq.supabase.co';
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://iwqbcfoqxferysuiwmeq.supabase.co';
 
   const handleTestConnection = async () => {
     setTestingConnection(true);
