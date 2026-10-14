@@ -50,14 +50,22 @@ function guestById(id: string): Guest {
   return DEMO_GUESTS.find(g => g.id === id)!;
 }
 
+// Helper: dynamic relative date strings
+const nowTime = new Date();
+export const getRelativeDate = (offsetDays: number, hour = 12): string => {
+  const d = new Date(nowTime.getFullYear(), nowTime.getMonth(), nowTime.getDate() + offsetDays, hour, 0, 0);
+  return d.toISOString();
+};
+
 // Helper: create a StayWithGuest
-function stay(guestId: string, roomId: string, checkIn: string): StayWithGuest {
+function stay(guestId: string, roomId: string, checkIn: string, expectedCheckout?: string): StayWithGuest {
   return {
     id: `stay-${guestId}-${roomId}`,
     guest_id: guestId,
     room_id: roomId,
     check_in: checkIn,
     check_out: null,
+    expected_checkout: expectedCheckout || getRelativeDate(2),
     status: 'active',
     source: 'manual',
     reference_id: null,
@@ -112,16 +120,16 @@ export const DEMO_ROOMS: RoomWithOccupancy[] = [
   // Ground — Wing A (10–20)
   makeRoom(10, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'vacant', building: 'main_wing_a', floor: 'ground', notes: 'Ground Floor Wing A', map_position: { row: 0, col: 0, section: 'wing_a' } }),
   makeRoom(11, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'occupied', building: 'main_wing_a', floor: 'ground', notes: 'Corner room with extra ventilation', map_position: { row: 0, col: 1, section: 'wing_a' }, last_cleaned_at: '2026-08-13T04:00:00Z', last_cleaned_by: 'Ramesh' },
-    [stay('g1', 'room-11', d2), stay('g2', 'room-11', d2)]),
+    [stay('g1', 'room-11', d2, getRelativeDate(0)), stay('g2', 'room-11', d2, getRelativeDate(0))]),
   makeRoom(12, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'occupied', building: 'main_wing_a', floor: 'ground', map_position: { row: 0, col: 2, section: 'wing_a' }, last_cleaned_at: '2026-08-13T05:00:00Z', last_cleaned_by: 'Ramesh' },
-    [stay('g3', 'room-12', d1), stay('g4', 'room-12', d1)]),
+    [stay('g3', 'room-12', d1, getRelativeDate(1)), stay('g4', 'room-12', d1, getRelativeDate(1))]),
   makeRoom(13, { room_type: 'non_ac', is_accommodation: false, purpose: 'Classroom', capacity: 0, status: 'vacant', building: 'main_wing_a', floor: 'ground', map_position: { row: 0, col: 3, section: 'wing_a' } }),
   makeRoom(14, { room_type: 'ac', has_ac: true, ac_status: 'not_working', status: 'vacant', building: 'main_wing_a', floor: 'ground', cleaning_status: 'cleaning_required', notes: 'AC remote missing', map_position: { row: 0, col: 4, section: 'wing_a' } }),
   makeRoom(15, { room_type: 'dormitory', has_ac: true, ac_status: 'working', capacity: 8, status: 'partially_occupied', building: 'main_wing_a', floor: 'ground', notes: 'Large dormitory', map_position: { row: 0, col: 5, section: 'wing_a' } },
-    [stay('g5', 'room-15', d3), stay('g6', 'room-15', d3), stay('g7', 'room-15', d2), stay('g8', 'room-15', d1), stay('g9', 'room-15', d1)]),
+    [stay('g5', 'room-15', d3, getRelativeDate(2)), stay('g6', 'room-15', d3, getRelativeDate(2)), stay('g7', 'room-15', d2, getRelativeDate(1)), stay('g8', 'room-15', d1, getRelativeDate(0)), stay('g9', 'room-15', d1, getRelativeDate(0))]),
   makeRoom(16, { room_type: 'non_ac', is_accommodation: false, purpose: 'Mega Kitchen', capacity: 0, status: 'vacant', building: 'main_wing_a', floor: 'ground', map_position: { row: 0, col: 6, section: 'wing_a' } }),
   makeRoom(17, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'occupied', building: 'main_wing_a', floor: 'ground', map_position: { row: 0, col: 7, section: 'wing_a' }, last_cleaned_at: '2026-08-13T02:00:00Z', last_cleaned_by: 'Ramesh' },
-    [stay('g10', 'room-17', d4), stay('g11', 'room-17', d4)]),
+    [stay('g10', 'room-17', d4, getRelativeDate(3)), stay('g11', 'room-17', d4, getRelativeDate(3))]),
   makeRoom(18, { room_type: 'ac', has_ac: true, ac_status: 'not_working', status: 'under_maintenance', building: 'main_wing_a', floor: 'ground', cleaning_status: 'cleaning_required', notes: 'AC compressor issue reported', map_position: { row: 0, col: 8, section: 'wing_a' } }),
   makeRoom(19, { room_type: 'non_ac', is_accommodation: false, purpose: 'Office', capacity: 0, status: 'vacant', building: 'main_wing_a', floor: 'ground', map_position: { row: 0, col: 9, section: 'wing_a' } }),
   makeRoom(20, { room_type: 'non_ac', is_accommodation: false, purpose: 'Staff Room', capacity: 0, status: 'vacant', building: 'main_wing_a', floor: 'ground', map_position: { row: 0, col: 10, section: 'wing_a' } }),
@@ -129,7 +137,7 @@ export const DEMO_ROOMS: RoomWithOccupancy[] = [
   // Second Floor (31–39)
   makeRoom(31, { room_type: 'non_ac', status: 'vacant', building: 'main_second', floor: 'second', map_position: { row: 1, col: 0, section: 'wing_b' } }),
   makeRoom(32, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'occupied', building: 'main_second', floor: 'second', cleaning_status: 'cleaning_required', map_position: { row: 2, col: 0, section: 'wing_b' } },
-    [stay('g18', 'room-32', d2)]),
+    [stay('g18', 'room-32', d2, getRelativeDate(0))]),
   makeRoom(33, { room_type: 'non_ac', is_accommodation: false, purpose: 'Classroom', capacity: 0, status: 'vacant', building: 'main_second', floor: 'second', map_position: { row: 3, col: 0, section: 'wing_b' } }),
   makeRoom(34, { room_type: 'ac', has_ac: true, ac_status: 'working', status: 'reserved', building: 'main_second', floor: 'second', notes: 'Reserved for group visit Aug 15', map_position: { row: 4, col: 0, section: 'wing_b' } }),
   makeRoom(35, { room_type: 'dormitory', has_ac: true, ac_status: 'working', capacity: 6, status: 'vacant', building: 'main_second', floor: 'second', map_position: { row: 5, col: 0, section: 'wing_b' } }),

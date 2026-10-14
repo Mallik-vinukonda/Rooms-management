@@ -32,8 +32,10 @@ import {
   BedDouble,
   Users,
   Check,
+  Calendar,
+  Clock,
 } from 'lucide-react';
-import type { RoomWithOccupancy, RoomStatus, ACStatus, CleaningStatus, RoomType } from '@/types';
+import type { RoomWithOccupancy, RoomStatus, ACStatus, CleaningStatus, RoomType, StayWithGuest } from '@/types';
 import {
   roomStatusConfig,
   roomTypeLabels,
@@ -42,12 +44,28 @@ import {
   formatDateTime,
   getBuildingLabel,
 } from '@/lib/utils';
+import { getStayCheckoutDetails } from '@/lib/checkout-utils';
 
 interface RoomDetailsDrawerProps {
   room: RoomWithOccupancy | null;
   onClose: () => void;
   onUpdateRoom?: (roomId: string, updates: Partial<RoomWithOccupancy>) => void;
 }
+
+const formatDateForInput = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getTodayInputDate = () => formatDateForInput(new Date());
+
+const getTomorrowInputDate = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return formatDateForInput(d);
+};
 
 export default function RoomDetailsDrawer({ room, onClose, onUpdateRoom }: RoomDetailsDrawerProps) {
   const [showActions, setShowActions] = useState(true);
@@ -58,6 +76,8 @@ export default function RoomDetailsDrawer({ room, onClose, onUpdateRoom }: RoomD
   const [showAddGuest, setShowAddGuest] = useState(false);
   const [newGuestName, setNewGuestName] = useState('');
   const [newGuestPhone, setNewGuestPhone] = useState('');
+  const [expectedCheckoutDate, setExpectedCheckoutDate] = useState<string>(getTomorrowInputDate());
+  const [stayNights, setStayNights] = useState<number>(1);
 
   // Space Classification & Purpose Editing
   const [editingClassification, setEditingClassification] = useState(false);
@@ -252,24 +272,79 @@ export default function RoomDetailsDrawer({ room, onClose, onUpdateRoom }: RoomD
     setEditingCleaning(false);
   };
 
+  const handleQuickDuration = (nights: number) => {
+    setStayNights(nights);
+    const d = new Date();
+    d.setDate(d.getDate() + nights);
+    setExpectedCheckoutDate(formatDateForInput(d));
+  };
+
   const handleAddGuest = () => {
-    if (!newGuestName.trim()) return;
-    const updated: Partial<RoomWithOccupancy> = {
-      current_occupancy: room.current_occupancy + 1,
-      current_guest_names: [...room.current_guest_names, newGuestName.trim()],
-      status: room.current_occupancy + 1 >= room.capacity ? 'occupied' : 'partially_occupied',
+    if (!room || !newGuestName.trim()) return;
+
+    // Build the expected checkout ISO string (12:00 PM standard checkout)
+    const checkoutParts = expectedCheckoutDate.split('-');
+    const checkoutObj = new Date(
+      parseInt(checkoutParts[0]),
+      parseInt(checkoutParts[1]) - 1,
+      parseInt(checkoutParts[2]),
+      12, 0, 0
+    );
+
+    const newStay: StayWithGuest = {
+      id: `stay-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      guest_id: `guest-${Date.now()}`,
+      room_id: room.id,
+      check_in: new Date().toISOString(),
+      check_out: null,
+      expected_checkout: checkoutObj.toISOString(),
+      status: 'active',
+      source: 'manual',
+      reference_id: null,
+      notes: '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      guest: {
+        id: `guest-${Date.now()}`,
+        full_name: newGuestName.trim(),
+        phone: newGuestPhone.trim() || null,
+        email: null,
+        num_occupants: 1,
+        notes: '',
+        reference_id: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
     };
+
+    const updatedStays = [...(room.active_stays || []), newStay];
+    const newOccupancy = room.current_occupancy + 1;
+
+    const updated: Partial<RoomWithOccupancy> = {
+      current_occupancy: newOccupancy,
+      current_guest_names: [...room.current_guest_names, newGuestName.trim()],
+      active_stays: updatedStays,
+      status: newOccupancy >= room.capacity ? 'occupied' : 'partially_occupied',
+    };
+
     onUpdateRoom?.(room.id, updated);
     setNewGuestName('');
     setNewGuestPhone('');
+    setExpectedCheckoutDate(getTomorrowInputDate());
+    setStayNights(1);
     setShowAddGuest(false);
   };
 
   const handleRemoveGuest = (guestName: string) => {
+    if (!room) return;
     const newGuests = room.current_guest_names.filter((n) => n !== guestName);
+    const updatedStays = (room.active_stays || []).filter(
+      (s) => s.guest?.full_name !== guestName
+    );
     const updated: Partial<RoomWithOccupancy> = {
       current_occupancy: newGuests.length,
       current_guest_names: newGuests,
+      active_stays: updatedStays,
       status:
         newGuests.length === 0
           ? 'vacant'
@@ -281,10 +356,12 @@ export default function RoomDetailsDrawer({ room, onClose, onUpdateRoom }: RoomD
   };
 
   const handleVacateRoom = () => {
+    if (!room) return;
     if (!confirm(`Vacate all guests from Room ${room.room_number}?`)) return;
     onUpdateRoom?.(room.id, {
       current_occupancy: 0,
       current_guest_names: [],
+      active_stays: [],
       status: 'vacant',
     });
   };
@@ -684,64 +761,164 @@ export default function RoomDetailsDrawer({ room, onClose, onUpdateRoom }: RoomD
                   )}
                 </div>
                 {room.current_guest_names.length > 0 ? (
-                  <div className="space-y-1.5">
-                    {room.current_guest_names.map((name, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2"
-                      >
-                        <div className="flex items-center gap-2">
-                          <UserIcon size={14} className="text-blue-500" />
-                          <span className="text-sm font-medium text-gray-800">{name}</span>
-                        </div>
-                        <button
-                          onClick={() => {
-                            if (confirm(`Remove ${name} from Room ${room.room_number}?`)) {
-                              handleRemoveGuest(name);
-                            }
-                          }}
-                          className="text-gray-400 hover:text-red-500 p-1"
-                          title="Remove guest"
+                  <div className="space-y-2">
+                    {room.current_guest_names.map((name, i) => {
+                      const stay = room.active_stays?.find((s) => s.guest?.full_name === name);
+                      const checkout = stay ? getStayCheckoutDetails(stay) : null;
+                      const checkInFormatted = stay?.check_in
+                        ? new Date(stay.check_in).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+                        : null;
+
+                      return (
+                        <div
+                          key={i}
+                          className="bg-gray-50 border border-gray-200/80 rounded-xl p-3 space-y-2"
                         >
-                          <UserMinus size={14} />
-                        </button>
-                      </div>
-                    ))}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <UserIcon size={14} className="text-blue-500" />
+                              <span className="text-sm font-semibold text-gray-800">{name}</span>
+                            </div>
+                            <button
+                              onClick={() => {
+                                if (confirm(`Check out / remove ${name} from Room ${room.room_number}?`)) {
+                                  handleRemoveGuest(name);
+                                }
+                              }}
+                              className="text-gray-400 hover:text-red-500 p-1 rounded hover:bg-red-50 transition-colors"
+                              title="Check out guest"
+                            >
+                              <UserMinus size={14} />
+                            </button>
+                          </div>
+
+                          {/* Guest details */}
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                            {stay?.guest?.phone && (
+                              <span className="flex items-center gap-1 text-gray-600 font-medium">
+                                <Phone size={11} className="text-gray-400" />
+                                {stay.guest.phone}
+                              </span>
+                            )}
+                            {checkInFormatted && (
+                              <span>Checked in: {checkInFormatted}</span>
+                            )}
+                          </div>
+
+                          {/* Checkout timing badge */}
+                          {checkout && (
+                            <div className="flex items-center justify-between pt-1.5 border-t border-gray-200/60 text-xs">
+                              <span className="text-gray-500 flex items-center gap-1">
+                                <Clock size={11} className="text-emerald-600" />
+                                Check-out: <strong className="text-gray-800">{checkout.formattedDate}</strong>
+                              </span>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${checkout.badgeBg} ${checkout.badgeText} ${checkout.badgeBorder}`}>
+                                {checkout.badgeLabel}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-sm text-gray-400 italic">No guests assigned</p>
                 )}
 
-                {/* Add Guest Form */}
+                {/* Add Guest Form with Expected Check-out */}
                 {showAddGuest && (
-                  <div className="mt-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200 space-y-2">
-                    <input
-                      type="text"
-                      placeholder="Guest name"
-                      value={newGuestName}
-                      onChange={(e) => setNewGuestName(e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                      autoFocus
-                    />
-                    <input
-                      type="text"
-                      placeholder="Phone (optional)"
-                      value={newGuestPhone}
-                      onChange={(e) => setNewGuestPhone(e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    />
-                    <div className="flex gap-2">
-                      <button onClick={handleAddGuest} className="action-btn primary text-xs">
+                  <div className="mt-3 p-3.5 bg-emerald-50/70 rounded-xl border border-emerald-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-emerald-900 uppercase tracking-wide">
+                        Check-in New Guest
+                      </span>
+                      <span className="text-[11px] text-emerald-700 font-semibold">Room {room.room_number}</span>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      <div>
+                        <label className="text-[11px] font-medium text-gray-600 mb-1 block">Guest Full Name *</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Ramesh Sharma"
+                          value={newGuestName}
+                          onChange={(e) => setNewGuestName(e.target.value)}
+                          className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          autoFocus
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] font-medium text-gray-600 mb-1 block">Phone Number (Optional)</label>
+                        <input
+                          type="text"
+                          placeholder="+91 98765 43210"
+                          value={newGuestPhone}
+                          onChange={(e) => setNewGuestPhone(e.target.value)}
+                          className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+
+                      {/* Expected Checkout Date Picker */}
+                      <div className="space-y-1.5 pt-1">
+                        <label className="text-xs font-semibold text-gray-700 flex items-center justify-between">
+                          <span className="flex items-center gap-1.5">
+                            <Calendar size={13} className="text-emerald-700" />
+                            Expected Check-out Date
+                          </span>
+                          <span className="text-[11px] text-gray-500 font-normal">Standard 12 PM</span>
+                        </label>
+
+                        <input
+                          type="date"
+                          min={getTodayInputDate()}
+                          value={expectedCheckoutDate}
+                          onChange={(e) => {
+                            setExpectedCheckoutDate(e.target.value);
+                            setStayNights(0);
+                          }}
+                          className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+
+                        {/* Quick Stay Duration Chips */}
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                          <span className="text-[11px] text-gray-500 font-medium mr-1">Quick:</span>
+                          {[
+                            { label: '1 Night', nights: 1 },
+                            { label: '2 Nights', nights: 2 },
+                            { label: '3 Nights', nights: 3 },
+                            { label: '1 Week', nights: 7 },
+                          ].map((chip) => (
+                            <button
+                              key={chip.nights}
+                              type="button"
+                              onClick={() => handleQuickDuration(chip.nights)}
+                              className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition-colors ${
+                                stayNights === chip.nights
+                                  ? 'bg-emerald-700 text-white shadow-sm'
+                                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-emerald-50'
+                              }`}
+                            >
+                              {chip.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-1 border-t border-emerald-200/60">
+                      <button onClick={handleAddGuest} className="action-btn primary text-xs flex-1 justify-center py-2 font-semibold">
                         <UserPlus size={13} />
-                        Add
+                        Confirm Check-in
                       </button>
                       <button
                         onClick={() => {
                           setShowAddGuest(false);
                           setNewGuestName('');
                           setNewGuestPhone('');
+                          setExpectedCheckoutDate(getTomorrowInputDate());
                         }}
-                        className="action-btn text-xs"
+                        className="action-btn text-xs px-3 py-2"
                       >
                         Cancel
                       </button>

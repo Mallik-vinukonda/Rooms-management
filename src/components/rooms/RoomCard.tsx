@@ -21,10 +21,14 @@ const statusColorVars: Record<string, string> = {
   non_functioning: '#9ca3af',
 };
 
+import RoomHoverCard from './RoomHoverCard';
+import { getRoomAvailability } from '@/lib/checkout-utils';
+
 export default function RoomCard({ room, onClick, compact = false }: RoomCardProps) {
   const statusConf = roomStatusConfig[room.status];
   const typeLabel = roomTypeLabels[room.room_type] || room.room_type;
   const acConf = room.has_ac ? acStatusConfig[room.ac_status] : null;
+  const availability = getRoomAvailability(room);
 
   if (!room.is_accommodation) {
     const raw = (room.purpose || '').trim();
@@ -40,40 +44,43 @@ export default function RoomCard({ room, onClick, compact = false }: RoomCardPro
 
     if (compact) {
       return (
-        <button
-          onClick={() => onClick?.(room)}
-          className="room-card flex flex-col gap-1 min-w-[80px] bg-stone-100/70 border-dashed border-stone-300 hover:border-stone-400"
-          style={{ '--room-status-color': '#78716c' } as React.CSSProperties}
-          title={`Room ${room.room_number} — ${room.purpose} (Non-Accommodation)`}
-        >
-          <div className="flex items-center justify-between pl-2">
-            <span className="text-xs font-bold text-stone-600">{room.room_number}</span>
-          </div>
-          <div className="pl-2 pb-1 text-[10px] font-bold text-stone-500 tracking-wider uppercase">
-            {shortPurpose}
-          </div>
-        </button>
+        <RoomHoverCard room={room}>
+          <button
+            onClick={() => onClick?.(room)}
+            className="room-card flex flex-col gap-1 min-w-[84px] bg-stone-100/70 border-dashed border-stone-300 hover:border-stone-400"
+            style={{ '--room-status-color': '#78716c' } as React.CSSProperties}
+          >
+            <div className="flex items-center justify-between pl-2">
+              <span className="text-xs font-bold text-stone-600">{room.room_number}</span>
+            </div>
+            <div className="pl-2 pb-1 text-[10px] font-bold text-stone-500 tracking-wider uppercase">
+              {shortPurpose}
+            </div>
+          </button>
+        </RoomHoverCard>
       );
     }
 
     return (
-      <button
-        onClick={() => onClick?.(room)}
-        className="room-card flex flex-col gap-1.5 w-full text-left bg-stone-100/70 border-dashed border-stone-300 hover:border-stone-400"
-        style={{ '--room-status-color': '#78716c' } as React.CSSProperties}
-      >
-        <div className="flex items-center justify-between pl-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-stone-800">{room.room_number}</span>
-            <span className="badge bg-stone-200 text-stone-700 border border-stone-300">
-              {room.purpose}
-            </span>
+      <RoomHoverCard room={room}>
+        <button
+          onClick={() => onClick?.(room)}
+          className="room-card flex flex-col gap-1.5 w-full text-left bg-stone-100/70 border-dashed border-stone-300 hover:border-stone-400"
+          style={{ '--room-status-color': '#78716c' } as React.CSSProperties}
+        >
+          <div className="flex items-center justify-between pl-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-stone-800">{room.room_number}</span>
+              <span className="badge bg-stone-200 text-stone-700 border border-stone-300">
+                {room.purpose}
+              </span>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2 pl-2 text-xs text-stone-500">
-          <span>Non-Accommodation Facility</span>
-        </div>
-      </button>
+          <div className="flex items-center gap-2 pl-2 text-xs text-stone-500">
+            <span>Non-Accommodation Facility</span>
+          </div>
+        </button>
+      </RoomHoverCard>
     );
   }
 
@@ -140,79 +147,107 @@ export default function RoomCard({ room, onClick, compact = false }: RoomCardPro
 
   if (compact) {
     return (
-      <button
-        onClick={() => onClick?.(room)}
-        className="room-card flex flex-col gap-1 min-w-[80px]"
-        style={{ '--room-status-color': statusColorVars[room.status] } as React.CSSProperties}
-        title={`Room ${room.room_number} — ${room.room_type === 'dormitory' ? 'Dormitory' : statusConf.label}`}
-      >
-        <div className="flex items-center justify-between pl-2">
-          <div className="flex items-center gap-1">
-            <span className="text-xs font-bold text-gray-800">{room.room_number}</span>
-            {room.room_type === 'dormitory' && (
-              <span className="text-[9px] font-bold px-1 rounded bg-indigo-100 text-indigo-700 leading-tight">
-                DORM
+      <RoomHoverCard room={room}>
+        <button
+          onClick={() => onClick?.(room)}
+          className="room-card flex flex-col gap-1 min-w-[84px] transition-all hover:scale-[1.02]"
+          style={{ '--room-status-color': statusColorVars[room.status] } as React.CSSProperties}
+        >
+          <div className="flex items-center justify-between pl-2">
+            <div className="flex items-center gap-1">
+              <span className="text-xs font-bold text-gray-800">{room.room_number}</span>
+              {room.room_type === 'dormitory' && (
+                <span className="text-[9px] font-bold px-1 rounded bg-indigo-100 text-indigo-700 leading-tight">
+                  DORM
+                </span>
+              )}
+            </div>
+            <StatusIcon />
+          </div>
+
+          <div className="flex items-center justify-between pl-2">
+            {renderOccupancy()}
+            <div className="flex items-center gap-1 ml-auto">
+              {renderAC()}
+              {renderCleaning()}
+            </div>
+          </div>
+
+          {/* Quick availability / checkout chip on the card */}
+          {availability.compactBadge && (
+            <div className="pl-2 pt-0.5">
+              <span className={`inline-block text-[9px] font-bold px-1.5 py-0.2 rounded border leading-tight ${availability.compactBadge.bg} ${availability.compactBadge.text} ${availability.compactBadge.border}`}>
+                {availability.compactBadge.label}
               </span>
-            )}
-          </div>
-          <StatusIcon />
-        </div>
-        <div className="flex items-center justify-between pl-2">
-          {renderOccupancy()}
-          <div className="flex items-center gap-1">
-            {renderAC()}
-            {renderCleaning()}
-          </div>
-        </div>
-      </button>
+            </div>
+          )}
+        </button>
+      </RoomHoverCard>
     );
   }
 
   return (
-    <button
-      onClick={() => onClick?.(room)}
-      className="room-card flex flex-col gap-1.5 w-full text-left"
-      style={{ '--room-status-color': statusColorVars[room.status] } as React.CSSProperties}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between pl-2">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-gray-800">{room.room_number}</span>
-          {room.room_type === 'dormitory' ? (
-            <span className="badge bg-indigo-100 text-indigo-800 border border-indigo-200">
-              Dormitory
-            </span>
-          ) : (
-            <span className={`badge ${statusConf.bgColor} ${statusConf.color}`}>
-              <StatusIcon />
-              {statusConf.label}
+    <RoomHoverCard room={room}>
+      <button
+        onClick={() => onClick?.(room)}
+        className="room-card flex flex-col gap-1.5 w-full text-left transition-all hover:shadow-md"
+        style={{ '--room-status-color': statusColorVars[room.status] } as React.CSSProperties}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between pl-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-gray-800">{room.room_number}</span>
+            {room.room_type === 'dormitory' ? (
+              <span className="badge bg-indigo-100 text-indigo-800 border border-indigo-200">
+                Dormitory
+              </span>
+            ) : (
+              <span className={`badge ${statusConf.bgColor} ${statusConf.color}`}>
+                <StatusIcon />
+                {statusConf.label}
+              </span>
+            )}
+          </div>
+
+          {/* Compact checkout badge */}
+          {availability.compactBadge && (
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${availability.compactBadge.bg} ${availability.compactBadge.text} ${availability.compactBadge.border}`}>
+              {availability.compactBadge.label}
             </span>
           )}
         </div>
-      </div>
 
-      {/* Type & Capacity */}
-      <div className="flex items-center gap-2 pl-2 text-xs text-gray-500">
-        <span>{typeLabel}</span>
-        <span>·</span>
-        <span>{room.current_occupancy}/{room.capacity}</span>
-      </div>
+        {/* Type & Capacity */}
+        <div className="flex items-center gap-2 pl-2 text-xs text-gray-500">
+          <span>{typeLabel}</span>
+          <span>·</span>
+          <span>{room.current_occupancy}/{room.capacity} beds</span>
+        </div>
 
-      {/* Occupancy */}
-      <div className="pl-2">
-        {renderOccupancy()}
-      </div>
+        {/* Occupancy */}
+        <div className="pl-2">
+          {renderOccupancy()}
+        </div>
 
-      {/* Footer icons */}
-      <div className="flex items-center gap-2 pl-2 border-t border-gray-100 pt-1.5 mt-0.5">
-        {renderAC()}
-        {renderCleaning()}
-        {room.has_ac && (
-          <span className="text-[10px] text-gray-400 ml-auto">
-            {acConf?.label}
+        {/* Next Available Timing */}
+        <div className="flex items-center justify-between pl-2 text-[11px] bg-stone-50/70 p-1.5 rounded-lg border border-stone-200/60 mt-0.5">
+          <span className="text-stone-400 font-medium">Next available:</span>
+          <span className={`font-semibold ${availability.isReadyNow ? 'text-emerald-700' : 'text-stone-700'}`}>
+            {availability.nextAvailableText}
           </span>
-        )}
-      </div>
-    </button>
+        </div>
+
+        {/* Footer icons */}
+        <div className="flex items-center gap-2 pl-2 border-t border-gray-100 pt-1.5 mt-0.5">
+          {renderAC()}
+          {renderCleaning()}
+          {room.has_ac && (
+            <span className="text-[10px] text-gray-400 ml-auto">
+              {acConf?.label}
+            </span>
+          )}
+        </div>
+      </button>
+    </RoomHoverCard>
   );
 }

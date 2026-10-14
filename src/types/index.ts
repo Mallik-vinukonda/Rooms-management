@@ -98,6 +98,7 @@ export interface Stay {
   room_id: string;
   check_in: string;
   check_out: string | null;
+  expected_checkout?: string | null;
   status: StayStatus;
   source: string;
   reference_id: string | null;

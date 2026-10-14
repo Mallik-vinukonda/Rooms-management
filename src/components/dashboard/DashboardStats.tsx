@@ -11,8 +11,10 @@ import {
   Snowflake,
   AlertTriangle,
   BarChart3,
+  Clock,
 } from 'lucide-react';
-import type { DashboardStats } from '@/types';
+import type { DashboardStats, RoomWithOccupancy } from '@/types';
+import { getStayCheckoutDetails } from '@/lib/checkout-utils';
 
 interface DashboardStatsProps {
   stats: DashboardStats;
@@ -162,6 +164,24 @@ export function AttentionAlerts({ stats, rooms }: AttentionAlertsProps) {
       color: 'text-orange-700',
       borderColor: 'border-orange-200',
       bgColor: 'bg-orange-50',
+    });
+  }
+
+  // Departures today alert
+  const vacatingTodayRooms = (rooms as RoomWithOccupancy[]).filter((r) => {
+    return r.active_stays?.some((s) => {
+      const details = getStayCheckoutDetails(s);
+      return details?.isToday;
+    });
+  });
+
+  if (vacatingTodayRooms.length > 0) {
+    alerts.push({
+      icon: <Clock size={16} />,
+      message: `${vacatingTodayRooms.length} room${vacatingTodayRooms.length > 1 ? 's' : ''} with guests checking out today (${vacatingTodayRooms.map((r) => `Room ${r.room_number}`).join(', ')})`,
+      color: 'text-amber-800',
+      borderColor: 'border-amber-300',
+      bgColor: 'bg-amber-50',
     });
   }
 

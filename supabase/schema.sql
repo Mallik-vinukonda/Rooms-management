@@ -112,6 +112,7 @@ CREATE TABLE stays (
   room_id UUID NOT NULL REFERENCES rooms(id) ON DELETE RESTRICT,
   check_in TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   check_out TIMESTAMPTZ,
+  expected_checkout TIMESTAMPTZ,
   status stay_status NOT NULL DEFAULT 'active',
   source TEXT DEFAULT 'manual',
   reference_id TEXT,

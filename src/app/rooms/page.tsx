@@ -25,6 +25,7 @@ import {
   Users,
 } from 'lucide-react';
 import type { RoomWithOccupancy } from '@/types';
+import { getRoomAvailability } from '@/lib/checkout-utils';
 
 type ViewMode = 'table' | 'grid';
 
@@ -275,6 +276,7 @@ export default function RoomsPage() {
                   <tbody className="divide-y divide-gray-100">
                     {filteredRooms.map((room) => {
                       const sc = roomStatusConfig[room.status];
+                      const availability = getRoomAvailability(room);
                       return (
                         <tr
                           key={room.id}
@@ -373,15 +375,27 @@ export default function RoomsPage() {
                               {cleaningStatusConfig[room.cleaning_status].label}
                             </span>
                           </td>
-                          <td className="px-3 py-3 text-sm text-gray-600 max-w-[200px] truncate">
+                          <td className="px-3 py-3 text-xs text-gray-600 max-w-[220px]">
                             {room.is_accommodation ? (
                               room.current_guest_names.length > 0 ? (
-                                room.current_guest_names.join(', ')
+                                <div className="space-y-1">
+                                  <div className="font-semibold text-gray-900 truncate">
+                                    {room.current_guest_names.join(', ')}
+                                  </div>
+                                  {availability.compactBadge && (
+                                    <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border ${availability.compactBadge.bg} ${availability.compactBadge.text} ${availability.compactBadge.border}`}>
+                                      {availability.compactBadge.label}
+                                    </span>
+                                  )}
+                                </div>
                               ) : (
-                                <span className="text-gray-400 italic">Vacant</span>
+                                <span className="text-emerald-700 font-medium flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                                  Ready Now
+                                </span>
                               )
                             ) : (
-                              <span className="text-xs text-stone-500">Non-accommodation space</span>
+                              <span className="text-xs text-stone-500">{room.purpose}</span>
                             )}
                           </td>
                         </tr>

@@ -6,6 +6,7 @@ import Header from '@/components/layout/Header';
 import DashboardStatsCards, { AttentionAlerts } from '@/components/dashboard/DashboardStats';
 import DashboardFilters from '@/components/dashboard/DashboardFilters';
 import Legend from '@/components/dashboard/Legend';
+import QuickAllotBar from '@/components/dashboard/QuickAllotBar';
 import RoomMap from '@/components/rooms/RoomMap';
 import RoomDetailsDrawer from '@/components/rooms/RoomDetailsDrawer';
 import { useRooms } from '@/context/RoomContext';
@@ -43,6 +44,9 @@ export default function DashboardPage() {
 
           {/* Attention Alerts */}
           <AttentionAlerts stats={currentStats} rooms={rooms} />
+
+          {/* Next Available Quick Allot Assistant */}
+          <QuickAllotBar rooms={rooms} onRoomSelect={handleRoomClick} />
 
           {/* Filters */}
           <div className="space-y-3">
