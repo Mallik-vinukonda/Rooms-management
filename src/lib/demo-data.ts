@@ -63,8 +63,8 @@ export const DEMO_ROOMS: RoomWithOccupancy[] = [
   makeRoom(14, { room_type: 'non_ac', capacity: 2, floor: 'ground', building: 'main_wing_a', map_position: { row: 0, col: 4, section: 'wing_a' } }),
   makeRoom(15, { room_type: 'non_ac', capacity: 2, floor: 'ground', building: 'main_wing_a', map_position: { row: 0, col: 5, section: 'wing_a' } }),
   makeRoom(16, { room_type: 'non_ac', capacity: 2, floor: 'ground', building: 'main_wing_a', map_position: { row: 0, col: 6, section: 'wing_a' } }),
-  makeRoom(17, { room_type: 'non_ac', capacity: 2, floor: 'ground', building: 'main_wing_a', map_position: { row: 0, col: 7, section: 'wing_a' } }),
-  makeRoom(18, { room_type: 'non_ac', capacity: 2, floor: 'ground', building: 'main_wing_a', map_position: { row: 0, col: 8, section: 'wing_a' } }),
+  makeRoom(17, { is_accommodation: false, purpose: 'Store Room', room_type: 'other', capacity: 0, notes: 'Store Room — Non-Accommodation', floor: 'ground', building: 'main_wing_a', map_position: { row: 0, col: 7, section: 'wing_a' } }),
+  makeRoom(18, { is_accommodation: false, purpose: 'Kitchen', room_type: 'other', capacity: 0, notes: 'Kitchen — Non-Accommodation', floor: 'ground', building: 'main_wing_a', map_position: { row: 0, col: 8, section: 'wing_a' } }),
   makeRoom(19, { room_type: 'non_ac', capacity: 2, floor: 'ground', building: 'main_wing_a', map_position: { row: 0, col: 9, section: 'wing_a' } }),
   makeRoom(20, { room_type: 'dormitory', purpose: 'Dormitory', capacity: 6, floor: 'ground', building: 'main_wing_a', map_position: { row: 0, col: 10, section: 'wing_a' } }),
 

@@ -4,13 +4,15 @@
 -- ============================================================
 -- Classifications:
 -- • Rooms 11, 12: Self Use (Non-Accommodation)
+-- • Room 17: Store Room (Non-Accommodation)
+-- • Room 18: Kitchen (Non-Accommodation)
 -- • Rooms 40, 41, 47, 48: Meeting Halls (Non-Accommodation)
 -- • Rooms 21, 42, 44, 46, 49: Staff Rooms (Non-Accommodation)
 -- • Rooms 10, 20, 28, 29, 30, 38, 39: Dormitories (Room 10 is AC Dorm, others Non-AC)
 -- • Rooms 22 to 27: AC Guest Rooms
 -- • Rooms 32 to 37: AC Guest Rooms
 -- • Room 53: AC Guest Room
--- • Remaining (13-19, 31, 43, 45, 50, 51, 52): Non-AC Guest Rooms
+-- • Remaining (13-16, 19, 31, 43, 45, 50, 51, 52): Non-AC Guest Rooms
 -- ============================================================
 
 -- Clean up any existing dummy guest, stay, and log data
@@ -50,8 +52,8 @@ INSERT INTO rooms (
 (14, 'non_ac',    'Guest Room',   2, 'ground', 'main_wing_a', 'vacant', false, 'not_applicable', 'clean', true,  '',                               '{"row": 0, "col": 4, "section": "wing_a"}', 4),
 (15, 'non_ac',    'Guest Room',   2, 'ground', 'main_wing_a', 'vacant', false, 'not_applicable', 'clean', true,  '',                               '{"row": 0, "col": 5, "section": "wing_a"}', 5),
 (16, 'non_ac',    'Guest Room',   2, 'ground', 'main_wing_a', 'vacant', false, 'not_applicable', 'clean', true,  '',                               '{"row": 0, "col": 6, "section": "wing_a"}', 6),
-(17, 'non_ac',    'Guest Room',   2, 'ground', 'main_wing_a', 'vacant', false, 'not_applicable', 'clean', true,  '',                               '{"row": 0, "col": 7, "section": "wing_a"}', 7),
-(18, 'non_ac',    'Guest Room',   2, 'ground', 'main_wing_a', 'vacant', false, 'not_applicable', 'clean', true,  '',                               '{"row": 0, "col": 8, "section": "wing_a"}', 8),
+(17, 'other',     'Store Room',   0, 'ground', 'main_wing_a', 'vacant', false, 'not_applicable', 'clean', false, 'Store Room — Non-Accommodation', '{"row": 0, "col": 7, "section": "wing_a"}', 7),
+(18, 'other',     'Kitchen',      0, 'ground', 'main_wing_a', 'vacant', false, 'not_applicable', 'clean', false, 'Kitchen — Non-Accommodation',    '{"row": 0, "col": 8, "section": "wing_a"}', 8),
 (19, 'non_ac',    'Guest Room',   2, 'ground', 'main_wing_a', 'vacant', false, 'not_applicable', 'clean', true,  '',                               '{"row": 0, "col": 9, "section": "wing_a"}', 9),
 (20, 'dormitory', 'Dormitory',    6, 'ground', 'main_wing_a', 'vacant', false, 'not_applicable', 'clean', true,  'Non-AC Dormitory',               '{"row": 0, "col": 10, "section": "wing_a"}', 10),
 
