@@ -19,7 +19,7 @@ interface RoomContextType {
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
 
-const LOCAL_STORAGE_KEY = 'sri_villa_rooms_v1';
+const LOCAL_STORAGE_KEY = 'sri_villa_rooms_v2';
 
 export function RoomProvider({ children }: { children: React.ReactNode }) {
   const [rooms, setRooms] = useState<RoomWithOccupancy[]>(DEMO_ROOMS);
