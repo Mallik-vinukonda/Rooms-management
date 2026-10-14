@@ -47,7 +47,7 @@ export default function RoomCard({ room, onClick, compact = false }: RoomCardPro
         <RoomHoverCard room={room}>
           <button
             onClick={() => onClick?.(room)}
-            className="room-card flex flex-col gap-1 min-w-[84px] bg-stone-100/70 border-dashed border-stone-300 hover:border-stone-400"
+            className="room-card flex flex-col gap-1 min-w-[80px] bg-stone-100/70 border-dashed border-stone-300 hover:border-stone-400"
             style={{ '--room-status-color': '#78716c' } as React.CSSProperties}
           >
             <div className="flex items-center justify-between pl-2">
@@ -150,7 +150,7 @@ export default function RoomCard({ room, onClick, compact = false }: RoomCardPro
       <RoomHoverCard room={room}>
         <button
           onClick={() => onClick?.(room)}
-          className="room-card flex flex-col gap-1 min-w-[84px] transition-all hover:scale-[1.02]"
+          className="room-card flex flex-col gap-1 min-w-[80px] transition-all hover:scale-[1.02]"
           style={{ '--room-status-color': statusColorVars[room.status] } as React.CSSProperties}
         >
           <div className="flex items-center justify-between pl-2">
@@ -172,15 +172,6 @@ export default function RoomCard({ room, onClick, compact = false }: RoomCardPro
               {renderCleaning()}
             </div>
           </div>
-
-          {/* Quick availability / checkout chip on the card */}
-          {availability.compactBadge && (
-            <div className="pl-2 pt-0.5">
-              <span className={`inline-block text-[9px] font-bold px-1.5 py-0.2 rounded border leading-tight ${availability.compactBadge.bg} ${availability.compactBadge.text} ${availability.compactBadge.border}`}>
-                {availability.compactBadge.label}
-              </span>
-            </div>
-          )}
         </button>
       </RoomHoverCard>
     );
@@ -208,13 +199,6 @@ export default function RoomCard({ room, onClick, compact = false }: RoomCardPro
               </span>
             )}
           </div>
-
-          {/* Compact checkout badge */}
-          {availability.compactBadge && (
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${availability.compactBadge.bg} ${availability.compactBadge.text} ${availability.compactBadge.border}`}>
-              {availability.compactBadge.label}
-            </span>
-          )}
         </div>
 
         {/* Type & Capacity */}
