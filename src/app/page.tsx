@@ -51,7 +51,7 @@ export default function DashboardPage() {
           {/* Filters */}
           <div className="space-y-3">
             <DashboardFilters activeFilter={statusFilter} onFilterChange={setStatusFilter} />
-            <Legend />
+            <Legend activeFilter={statusFilter} onFilterChange={setStatusFilter} />
           </div>
 
           {/* Property Map */}

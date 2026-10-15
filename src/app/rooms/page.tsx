@@ -90,7 +90,11 @@ export default function RoomsPage() {
 
     // Status filter
     if (statusFilter !== 'all') {
-      result = result.filter((r) => r.status === statusFilter);
+      if (statusFilter === 'occupied') {
+        result = result.filter((r) => r.status === 'occupied' || r.status === 'partially_occupied');
+      } else {
+        result = result.filter((r) => r.status === statusFilter);
+      }
     }
 
     // Sort
