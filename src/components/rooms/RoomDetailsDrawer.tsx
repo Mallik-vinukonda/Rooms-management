@@ -924,6 +924,252 @@ export default function RoomDetailsDrawer({ room, onClose, onUpdateRoom }: RoomD
                     </div>
                   </div>
                 )}
+
+                {/* Add Guest Form */}
+                {showAddGuest && (
+                  <div className="mb-3 p-3.5 bg-emerald-50/80 rounded-xl border border-emerald-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-emerald-900 uppercase tracking-wide flex items-center gap-1">
+                        <UserPlus size={13} className="text-emerald-700" />
+                        Check-in New Guest
+                      </span>
+                      <span className="text-[11px] text-emerald-700 font-semibold">Room {room.room_number}</span>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      <div>
+                        <label className="text-[11px] font-medium text-gray-700 mb-1 block">Guest Full Name *</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Ramesh Sharma"
+                          value={newGuestName}
+                          onChange={(e) => setNewGuestName(e.target.value)}
+                          className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          autoFocus
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] font-medium text-gray-700 mb-1 block">Phone Number (Optional)</label>
+                        <input
+                          type="text"
+                          placeholder="+91 98765 43210"
+                          value={newGuestPhone}
+                          onChange={(e) => setNewGuestPhone(e.target.value)}
+                          className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+
+                      {/* Expected Checkout Date Picker */}
+                      <div className="space-y-1.5 pt-1">
+                        <label className="text-xs font-semibold text-gray-700 flex items-center justify-between">
+                          <span className="flex items-center gap-1.5">
+                            <Calendar size={13} className="text-emerald-700" />
+                            Expected Check-out Date
+                          </span>
+                          <span className="text-[11px] text-gray-500 font-normal">Standard 12 PM</span>
+                        </label>
+
+                        <input
+                          type="date"
+                          min={getTodayInputDate()}
+                          value={expectedCheckoutDate}
+                          onChange={(e) => {
+                            setExpectedCheckoutDate(e.target.value);
+                            setStayNights(0);
+                          }}
+                          className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+
+                        {/* Quick Stay Duration Chips */}
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                          <span className="text-[11px] text-gray-500 font-medium mr-1">Quick:</span>
+                          {[
+                            { label: '1 Night', nights: 1 },
+                            { label: '2 Nights', nights: 2 },
+                            { label: '3 Nights', nights: 3 },
+                            { label: '1 Week', nights: 7 },
+                          ].map((chip) => (
+                            <button
+                              key={chip.nights}
+                              type="button"
+                              onClick={() => handleQuickDuration(chip.nights)}
+                              className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition-colors ${
+                                stayNights === chip.nights
+                                  ? 'bg-emerald-700 text-white shadow-sm'
+                                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-emerald-50'
+                              }`}
+                            >
+                              {chip.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-1 border-t border-emerald-200/60">
+                      <button
+                        onClick={handleAddGuest}
+                        disabled={isSubmittingGuest || !newGuestName.trim()}
+                        className="action-btn primary text-xs flex-1 justify-center py-2 font-semibold flex items-center gap-1.5"
+                      >
+                        {isSubmittingGuest ? <Loader2 size={13} className="animate-spin" /> : <UserPlus size={13} />}
+                        Confirm Check-in
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowAddGuest(false);
+                          setNewGuestName('');
+                          setNewGuestPhone('');
+                          setExpectedCheckoutDate(getTomorrowInputDate());
+                        }}
+                        disabled={isSubmittingGuest}
+                        className="action-btn text-xs px-3 py-2"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Current Active Stays */}
+                {room.active_stays && room.active_stays.length > 0 ? (
+                  <div className="space-y-2 mt-2">
+                    {room.active_stays.map((stay) => {
+                      const checkoutDetails = getStayCheckoutDetails(stay);
+                      return (
+                        <div
+                          key={stay.id}
+                          className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm hover:border-gray-300 transition-all space-y-2"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0">
+                                <UserIcon size={14} />
+                              </div>
+                              <div className="min-w-0">
+                                <h4 className="text-sm font-bold text-gray-900 truncate">
+                                  {stay.guest?.full_name || 'Guest'}
+                                </h4>
+                                {stay.guest?.phone ? (
+                                  <a
+                                    href={`tel:${stay.guest.phone}`}
+                                    className="text-xs text-gray-500 hover:text-emerald-600 flex items-center gap-1 mt-0.5"
+                                  >
+                                    <Phone size={11} className="text-gray-400" />
+                                    {stay.guest.phone}
+                                  </a>
+                                ) : (
+                                  <span className="text-[11px] text-gray-400 italic">No phone recorded</span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Departure status badge */}
+                            {checkoutDetails && (
+                              <span
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0 flex items-center gap-1 ${checkoutDetails.badgeBg} ${checkoutDetails.badgeText} ${checkoutDetails.badgeBorder}`}
+                              >
+                                {checkoutDetails.isToday && <Clock size={10} />}
+                                {checkoutDetails.badgeLabel}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Stay Dates */}
+                          <div className="grid grid-cols-2 gap-2 text-[11px] pt-1.5 border-t border-gray-100 text-gray-500">
+                            <div>
+                              <span className="text-gray-400 block text-[10px]">Check-in</span>
+                              <span className="font-medium text-gray-700">
+                                {new Date(stay.check_in).toLocaleDateString('en-IN', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                })}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-400 block text-[10px]">Expected Check-out</span>
+                              <span className="font-medium text-gray-700">
+                                {stay.expected_checkout
+                                  ? new Date(stay.expected_checkout).toLocaleDateString('en-IN', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                    })
+                                  : 'Not set'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons: Edit & Check Out */}
+                          <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                            <button
+                              onClick={() => handleStartEditGuest(stay)}
+                              className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+                            >
+                              <Edit size={12} />
+                              Edit Details
+                            </button>
+                            <button
+                              onClick={() => handleRemoveGuest(stay)}
+                              disabled={isSubmittingGuest}
+                              className="text-xs text-red-600 hover:text-red-800 font-medium flex items-center gap-1 px-2 py-1 rounded hover:bg-red-50 ml-auto transition-colors"
+                            >
+                              {isSubmittingGuest ? (
+                                <Loader2 size={12} className="animate-spin" />
+                              ) : (
+                                <UserMinus size={12} />
+                              )}
+                              Check Out
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="mt-2 text-center py-6 px-4 bg-gray-50/70 border border-dashed border-gray-200 rounded-xl space-y-2">
+                    <UserIcon size={24} className="mx-auto text-gray-300" />
+                    <div>
+                      <p className="text-xs font-semibold text-gray-600">No Guests Checked In</p>
+                      <p className="text-[11px] text-gray-400">
+                        {room.capacity > 0
+                          ? `Room has space for ${room.capacity} guest(s).`
+                          : 'Room is not currently occupied.'}
+                      </p>
+                    </div>
+
+                    {(room.status === 'occupied' || room.status === 'partially_occupied') && (
+                      <div className="bg-amber-50 border border-amber-200 text-amber-800 text-[11px] p-2 rounded-lg text-left mt-2">
+                        <p className="font-semibold flex items-center gap-1">
+                          <AlertTriangle size={12} /> Status is marked {room.status.replace('_', ' ')}
+                        </p>
+                        <p className="text-amber-700 mt-0.5">
+                          No guest records are currently attached in Supabase. You can check in a guest now or set the room to Vacant.
+                        </p>
+                        <button
+                          onClick={handleVacateRoom}
+                          disabled={isSubmittingGuest}
+                          className="mt-1.5 text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 px-2.5 py-1 rounded border border-amber-300"
+                        >
+                          Set Room to Vacant
+                        </button>
+                      </div>
+                    )}
+
+                    {room.current_occupancy < room.capacity && !showAddGuest && (
+                      <button
+                        onClick={() => {
+                          setShowAddGuest(true);
+                          setEditingStay(null);
+                        }}
+                        className="action-btn primary text-xs mx-auto mt-2"
+                      >
+                        <UserPlus size={13} />
+                        Check-in Guest
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </>
           ) : (
