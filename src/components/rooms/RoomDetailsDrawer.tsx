@@ -34,8 +34,10 @@ import {
   Check,
   Calendar,
   Clock,
+  Loader2,
 } from 'lucide-react';
 import type { RoomWithOccupancy, RoomStatus, ACStatus, CleaningStatus, RoomType, StayWithGuest } from '@/types';
+import { useRooms } from '@/context/RoomContext';
 import {
   roomStatusConfig,
   roomTypeLabels,
@@ -68,6 +70,17 @@ const getTomorrowInputDate = () => {
 };
 
 export default function RoomDetailsDrawer({ room, onClose, onUpdateRoom }: RoomDetailsDrawerProps) {
+  const { addGuestToRoom, updateGuestStay, removeGuestFromRoom, vacateRoom } = useRooms();
+  const [isSubmittingGuest, setIsSubmittingGuest] = useState(false);
+  const [guestFeedback, setGuestFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Edit Guest State
+  const [editingStay, setEditingStay] = useState<StayWithGuest | null>(null);
+  const [editGuestName, setEditGuestName] = useState('');
+  const [editGuestPhone, setEditGuestPhone] = useState('');
+  const [editCheckInDate, setEditCheckInDate] = useState('');
+  const [editCheckoutDate, setEditCheckoutDate] = useState('');
+
   const [showActions, setShowActions] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
   const [editingStatus, setEditingStatus] = useState(false);
@@ -279,8 +292,11 @@ export default function RoomDetailsDrawer({ room, onClose, onUpdateRoom }: RoomD
     setExpectedCheckoutDate(formatDateForInput(d));
   };
 
-  const handleAddGuest = () => {
+  const handleAddGuest = async () => {
     if (!room || !newGuestName.trim()) return;
+
+    setIsSubmittingGuest(true);
+    setGuestFeedback(null);
 
     // Build the expected checkout ISO string (12:00 PM standard checkout)
     const checkoutParts = expectedCheckoutDate.split('-');
@@ -291,43 +307,23 @@ export default function RoomDetailsDrawer({ room, onClose, onUpdateRoom }: RoomD
       12, 0, 0
     );
 
-    const newStay: StayWithGuest = {
-      id: `stay-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      guest_id: `guest-${Date.now()}`,
-      room_id: room.id,
-      check_in: new Date().toISOString(),
-      check_out: null,
-      expected_checkout: checkoutObj.toISOString(),
-      status: 'active',
-      source: 'manual',
-      reference_id: null,
-      notes: '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      guest: {
-        id: `guest-${Date.now()}`,
-        full_name: newGuestName.trim(),
-        phone: newGuestPhone.trim() || null,
-        email: null,
-        num_occupants: 1,
-        notes: '',
-        reference_id: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    };
+    const res = await addGuestToRoom(room.id, {
+      fullName: newGuestName.trim(),
+      phone: newGuestPhone.trim() || undefined,
+      expectedCheckout: checkoutObj.toISOString(),
+    });
 
-    const updatedStays = [...(room.active_stays || []), newStay];
-    const newOccupancy = room.current_occupancy + 1;
+    setIsSubmittingGuest(false);
 
-    const updated: Partial<RoomWithOccupancy> = {
-      current_occupancy: newOccupancy,
-      current_guest_names: [...room.current_guest_names, newGuestName.trim()],
-      active_stays: updatedStays,
-      status: newOccupancy >= room.capacity ? 'occupied' : 'partially_occupied',
-    };
+    if (!res.success) {
+      setGuestFeedback({ type: 'error', message: res.error || 'Failed to add guest to Supabase' });
+      return;
+    }
 
-    onUpdateRoom?.(room.id, updated);
+    setGuestFeedback({
+      type: 'success',
+      message: `Guest "${newGuestName.trim()}" checked in and saved to Supabase!`,
+    });
     setNewGuestName('');
     setNewGuestPhone('');
     setExpectedCheckoutDate(getTomorrowInputDate());
@@ -335,35 +331,98 @@ export default function RoomDetailsDrawer({ room, onClose, onUpdateRoom }: RoomD
     setShowAddGuest(false);
   };
 
-  const handleRemoveGuest = (guestName: string) => {
+  const handleRemoveGuest = async (stay: StayWithGuest) => {
     if (!room) return;
-    const newGuests = room.current_guest_names.filter((n) => n !== guestName);
-    const updatedStays = (room.active_stays || []).filter(
-      (s) => s.guest?.full_name !== guestName
-    );
-    const updated: Partial<RoomWithOccupancy> = {
-      current_occupancy: newGuests.length,
-      current_guest_names: newGuests,
-      active_stays: updatedStays,
-      status:
-        newGuests.length === 0
-          ? 'vacant'
-          : newGuests.length < room.capacity
-          ? 'partially_occupied'
-          : 'occupied',
-    };
-    onUpdateRoom?.(room.id, updated);
+    setIsSubmittingGuest(true);
+    setGuestFeedback(null);
+
+    const res = await removeGuestFromRoom(stay.id, room.id);
+    setIsSubmittingGuest(false);
+
+    if (!res.success) {
+      setGuestFeedback({ type: 'error', message: res.error || 'Failed to check out guest in Supabase' });
+      return;
+    }
+
+    setGuestFeedback({
+      type: 'success',
+      message: `${stay.guest?.full_name || 'Guest'} checked out and updated in Supabase`,
+    });
   };
 
-  const handleVacateRoom = () => {
+  const handleVacateRoom = async () => {
     if (!room) return;
     if (!confirm(`Vacate all guests from Room ${room.room_number}?`)) return;
-    onUpdateRoom?.(room.id, {
-      current_occupancy: 0,
-      current_guest_names: [],
-      active_stays: [],
-      status: 'vacant',
+
+    setIsSubmittingGuest(true);
+    setGuestFeedback(null);
+
+    const res = await vacateRoom(room.id);
+    setIsSubmittingGuest(false);
+
+    if (!res.success) {
+      setGuestFeedback({ type: 'error', message: res.error || 'Failed to vacate room in Supabase' });
+      return;
+    }
+
+    setGuestFeedback({
+      type: 'success',
+      message: `Room ${room.room_number} vacated and marked vacant in Supabase`,
     });
+  };
+
+  const handleStartEditGuest = (stay: StayWithGuest) => {
+    setEditingStay(stay);
+    setEditGuestName(stay.guest?.full_name || '');
+    setEditGuestPhone(stay.guest?.phone || '');
+    setEditCheckInDate(
+      stay.check_in ? formatDateForInput(new Date(stay.check_in)) : getTodayInputDate()
+    );
+    setEditCheckoutDate(
+      stay.expected_checkout
+        ? formatDateForInput(new Date(stay.expected_checkout))
+        : getTomorrowInputDate()
+    );
+    setGuestFeedback(null);
+  };
+
+  const handleSaveEditGuest = async () => {
+    if (!editingStay || !editGuestName.trim()) return;
+
+    setIsSubmittingGuest(true);
+    setGuestFeedback(null);
+
+    let checkInISO: string | undefined = undefined;
+    if (editCheckInDate) {
+      const [y, m, d] = editCheckInDate.split('-').map(Number);
+      checkInISO = new Date(y, m - 1, d, 12, 0, 0).toISOString();
+    }
+
+    let checkoutISO: string | undefined = undefined;
+    if (editCheckoutDate) {
+      const [y, m, d] = editCheckoutDate.split('-').map(Number);
+      checkoutISO = new Date(y, m - 1, d, 12, 0, 0).toISOString();
+    }
+
+    const res = await updateGuestStay(editingStay.id, {
+      fullName: editGuestName.trim(),
+      phone: editGuestPhone.trim() || undefined,
+      checkIn: checkInISO,
+      expectedCheckout: checkoutISO,
+    });
+
+    setIsSubmittingGuest(false);
+
+    if (!res.success) {
+      setGuestFeedback({ type: 'error', message: res.error || 'Failed to update guest in Supabase' });
+      return;
+    }
+
+    setGuestFeedback({
+      type: 'success',
+      message: `Guest details updated and saved to Supabase!`,
+    });
+    setEditingStay(null);
   };
 
   const allStatuses: RoomStatus[] = [
@@ -752,7 +811,11 @@ export default function RoomDetailsDrawer({ room, onClose, onUpdateRoom }: RoomD
                   </span>
                   {room.current_occupancy < room.capacity && (
                     <button
-                      onClick={() => setShowAddGuest(!showAddGuest)}
+                      onClick={() => {
+                        setShowAddGuest(!showAddGuest);
+                        setEditingStay(null);
+                        setGuestFeedback(null);
+                      }}
                       className="text-xs text-emerald-600 hover:underline flex items-center gap-1"
                     >
                       <UserPlus size={12} />
@@ -760,164 +823,100 @@ export default function RoomDetailsDrawer({ room, onClose, onUpdateRoom }: RoomD
                     </button>
                   )}
                 </div>
-                {room.current_guest_names.length > 0 ? (
-                  <div className="space-y-2">
-                    {room.current_guest_names.map((name, i) => {
-                      const stay = room.active_stays?.find((s) => s.guest?.full_name === name);
-                      const checkout = stay ? getStayCheckoutDetails(stay) : null;
-                      const checkInFormatted = stay?.check_in
-                        ? new Date(stay.check_in).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-                        : null;
 
-                      return (
-                        <div
-                          key={i}
-                          className="bg-gray-50 border border-gray-200/80 rounded-xl p-3 space-y-2"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <UserIcon size={14} className="text-blue-500" />
-                              <span className="text-sm font-semibold text-gray-800">{name}</span>
-                            </div>
-                            <button
-                              onClick={() => {
-                                if (confirm(`Check out / remove ${name} from Room ${room.room_number}?`)) {
-                                  handleRemoveGuest(name);
-                                }
-                              }}
-                              className="text-gray-400 hover:text-red-500 p-1 rounded hover:bg-red-50 transition-colors"
-                              title="Check out guest"
-                            >
-                              <UserMinus size={14} />
-                            </button>
-                          </div>
-
-                          {/* Guest details */}
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                            {stay?.guest?.phone && (
-                              <span className="flex items-center gap-1 text-gray-600 font-medium">
-                                <Phone size={11} className="text-gray-400" />
-                                {stay.guest.phone}
-                              </span>
-                            )}
-                            {checkInFormatted && (
-                              <span>Checked in: {checkInFormatted}</span>
-                            )}
-                          </div>
-
-                          {/* Checkout timing badge */}
-                          {checkout && (
-                            <div className="flex items-center justify-between pt-1.5 border-t border-gray-200/60 text-xs">
-                              <span className="text-gray-500 flex items-center gap-1">
-                                <Clock size={11} className="text-emerald-600" />
-                                Check-out: <strong className="text-gray-800">{checkout.formattedDate}</strong>
-                              </span>
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${checkout.badgeBg} ${checkout.badgeText} ${checkout.badgeBorder}`}>
-                                {checkout.badgeLabel}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                {/* Feedback banner */}
+                {guestFeedback && (
+                  <div
+                    className={`p-2.5 rounded-lg text-xs flex items-center justify-between mb-3 border ${
+                      guestFeedback.type === 'success'
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                        : 'bg-red-50 text-red-800 border-red-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      {guestFeedback.type === 'success' ? (
+                        <Check size={14} className="text-emerald-600 flex-shrink-0" />
+                      ) : (
+                        <AlertTriangle size={14} className="text-red-600 flex-shrink-0" />
+                      )}
+                      <span>{guestFeedback.message}</span>
+                    </div>
+                    <button
+                      onClick={() => setGuestFeedback(null)}
+                      className="text-gray-400 hover:text-gray-600 ml-2"
+                    >
+                      <X size={12} />
+                    </button>
                   </div>
-                ) : (
-                  <p className="text-sm text-gray-400 italic">No guests assigned</p>
                 )}
 
-                {/* Add Guest Form with Expected Check-out */}
-                {showAddGuest && (
-                  <div className="mt-3 p-3.5 bg-emerald-50/70 rounded-xl border border-emerald-200 space-y-3">
+                {/* Edit Guest Form */}
+                {editingStay && (
+                  <div className="mb-3 p-3.5 bg-blue-50/80 rounded-xl border border-blue-200 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-emerald-900 uppercase tracking-wide">
-                        Check-in New Guest
+                      <span className="text-xs font-bold text-blue-900 uppercase tracking-wide flex items-center gap-1">
+                        <Edit size={13} className="text-blue-700" />
+                        Edit Guest Details
                       </span>
-                      <span className="text-[11px] text-emerald-700 font-semibold">Room {room.room_number}</span>
+                      <span className="text-[11px] text-blue-700 font-semibold">Room {room.room_number}</span>
                     </div>
 
                     <div className="space-y-2.5">
                       <div>
-                        <label className="text-[11px] font-medium text-gray-600 mb-1 block">Guest Full Name *</label>
+                        <label className="text-[11px] font-medium text-gray-700 mb-1 block">Guest Full Name *</label>
                         <input
                           type="text"
-                          placeholder="e.g. Ramesh Sharma"
-                          value={newGuestName}
-                          onChange={(e) => setNewGuestName(e.target.value)}
-                          className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          value={editGuestName}
+                          onChange={(e) => setEditGuestName(e.target.value)}
+                          className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                           autoFocus
                         />
                       </div>
 
                       <div>
-                        <label className="text-[11px] font-medium text-gray-600 mb-1 block">Phone Number (Optional)</label>
+                        <label className="text-[11px] font-medium text-gray-700 mb-1 block">Phone Number</label>
                         <input
                           type="text"
-                          placeholder="+91 98765 43210"
-                          value={newGuestPhone}
-                          onChange={(e) => setNewGuestPhone(e.target.value)}
-                          className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          value={editGuestPhone}
+                          onChange={(e) => setEditGuestPhone(e.target.value)}
+                          className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
 
-                      {/* Expected Checkout Date Picker */}
-                      <div className="space-y-1.5 pt-1">
-                        <label className="text-xs font-semibold text-gray-700 flex items-center justify-between">
-                          <span className="flex items-center gap-1.5">
-                            <Calendar size={13} className="text-emerald-700" />
-                            Expected Check-out Date
-                          </span>
-                          <span className="text-[11px] text-gray-500 font-normal">Standard 12 PM</span>
-                        </label>
-
-                        <input
-                          type="date"
-                          min={getTodayInputDate()}
-                          value={expectedCheckoutDate}
-                          onChange={(e) => {
-                            setExpectedCheckoutDate(e.target.value);
-                            setStayNights(0);
-                          }}
-                          className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        />
-
-                        {/* Quick Stay Duration Chips */}
-                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                          <span className="text-[11px] text-gray-500 font-medium mr-1">Quick:</span>
-                          {[
-                            { label: '1 Night', nights: 1 },
-                            { label: '2 Nights', nights: 2 },
-                            { label: '3 Nights', nights: 3 },
-                            { label: '1 Week', nights: 7 },
-                          ].map((chip) => (
-                            <button
-                              key={chip.nights}
-                              type="button"
-                              onClick={() => handleQuickDuration(chip.nights)}
-                              className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition-colors ${
-                                stayNights === chip.nights
-                                  ? 'bg-emerald-700 text-white shadow-sm'
-                                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-emerald-50'
-                              }`}
-                            >
-                              {chip.label}
-                            </button>
-                          ))}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[11px] font-medium text-gray-700 mb-1 block">Check-in Date</label>
+                          <input
+                            type="date"
+                            value={editCheckInDate}
+                            onChange={(e) => setEditCheckInDate(e.target.value)}
+                            className="w-full px-2.5 py-1.5 text-xs bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-medium text-gray-700 mb-1 block">Expected Check-out</label>
+                          <input
+                            type="date"
+                            value={editCheckoutDate}
+                            onChange={(e) => setEditCheckoutDate(e.target.value)}
+                            className="w-full px-2.5 py-1.5 text-xs bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex gap-2 pt-1 border-t border-emerald-200/60">
-                      <button onClick={handleAddGuest} className="action-btn primary text-xs flex-1 justify-center py-2 font-semibold">
-                        <UserPlus size={13} />
-                        Confirm Check-in
+                    <div className="flex gap-2 pt-1 border-t border-blue-200">
+                      <button
+                        onClick={handleSaveEditGuest}
+                        disabled={isSubmittingGuest || !editGuestName.trim()}
+                        className="action-btn text-xs flex-1 justify-center py-2 font-semibold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5"
+                      >
+                        {isSubmittingGuest ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                        Save Changes
                       </button>
                       <button
-                        onClick={() => {
-                          setShowAddGuest(false);
-                          setNewGuestName('');
-                          setNewGuestPhone('');
-                          setExpectedCheckoutDate(getTomorrowInputDate());
-                        }}
+                        onClick={() => setEditingStay(null)}
+                        disabled={isSubmittingGuest}
                         className="action-btn text-xs px-3 py-2"
                       >
                         Cancel

@@ -32,7 +32,24 @@ export async function GET() {
         .select('*, guest:guests(*)')
         .eq('status', 'active');
       if (staysData) {
-        activeStays = staysData;
+        activeStays = staysData.map((stay: any) => {
+          let expected_checkout = stay.expected_checkout || null;
+          let notes = stay.notes || '';
+          if (!expected_checkout && notes) {
+            try {
+              const parsed = JSON.parse(notes);
+              if (parsed && typeof parsed === 'object') {
+                if (parsed.expected_checkout) expected_checkout = parsed.expected_checkout;
+                if (parsed.note !== undefined) notes = parsed.note;
+              }
+            } catch {}
+          }
+          return {
+            ...stay,
+            expected_checkout,
+            notes,
+          };
+        });
       }
     } catch (e) {
       console.warn('Could not fetch stays, proceeding with rooms:', e);
@@ -119,6 +136,22 @@ export async function PATCH(request: Request) {
         { success: false, error: error.message },
         { status: 500 }
       );
+    }
+
+    if (payload.status === 'vacant' && data && data[0]) {
+      try {
+        await supabase
+          .from('stays')
+          .update({
+            status: 'checked_out',
+            check_out: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('room_id', data[0].id)
+          .eq('status', 'active');
+      } catch (e) {
+        console.warn('Could not checkout stays for vacated room:', e);
+      }
     }
 
     return NextResponse.json({ success: true, updated: data });

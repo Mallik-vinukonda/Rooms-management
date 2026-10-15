@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { RoomWithOccupancy, DashboardStats } from '@/types';
+import type { RoomWithOccupancy, DashboardStats, RoomStatus, StayWithGuest } from '@/types';
 import { DEMO_ROOMS } from '@/lib/demo-data';
 
 export type SyncStatus = 'checking' | 'supabase_connected' | 'local_storage';
@@ -14,6 +14,28 @@ interface RoomContextType {
   updateRoom: (roomId: string, updates: Partial<RoomWithOccupancy>) => Promise<void>;
   resetRooms: () => void;
   refreshRooms: () => Promise<void>;
+  addGuestToRoom: (
+    roomId: string,
+    guestData: {
+      fullName: string;
+      phone?: string;
+      checkIn?: string;
+      expectedCheckout?: string;
+      notes?: string;
+    }
+  ) => Promise<{ success: boolean; error?: string }>;
+  updateGuestStay: (
+    stayId: string,
+    updates: {
+      fullName?: string;
+      phone?: string;
+      checkIn?: string;
+      expectedCheckout?: string;
+      notes?: string;
+    }
+  ) => Promise<{ success: boolean; error?: string }>;
+  removeGuestFromRoom: (stayId: string, roomId: string) => Promise<{ success: boolean; error?: string }>;
+  vacateRoom: (roomId: string) => Promise<{ success: boolean; error?: string }>;
   stats: DashboardStats;
 }
 
@@ -124,6 +146,254 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
     }
   }, [rooms]);
 
+  // Add Guest: persist to Supabase /api/stays and update local state
+  const addGuestToRoom = useCallback(
+    async (
+      roomId: string,
+      guestData: {
+        fullName: string;
+        phone?: string;
+        checkIn?: string;
+        expectedCheckout?: string;
+        notes?: string;
+      }
+    ) => {
+      try {
+        const targetRoom = rooms.find(
+          (r) => r.id === roomId || r.room_number.toString() === roomId
+        );
+
+        const res = await fetch('/api/stays', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            roomId,
+            roomNumber: targetRoom?.room_number,
+            fullName: guestData.fullName,
+            phone: guestData.phone,
+            checkIn: guestData.checkIn,
+            expectedCheckout: guestData.expectedCheckout,
+            notes: guestData.notes,
+          }),
+        });
+
+        const json = await res.json();
+        if (!json.success) {
+          return { success: false, error: json.error || 'Failed to add guest' };
+        }
+
+        const newStay = json.stay;
+        const newStatus = json.roomStatus;
+
+        // Update local state
+        setRooms((prev) => {
+          const next = prev.map((r) => {
+            if (r.id === roomId || r.room_number.toString() === roomId || (json.roomId && r.id === json.roomId)) {
+              const currentStays = r.active_stays || [];
+              const updatedStays = [...currentStays, newStay];
+              const updatedGuestNames = [...r.current_guest_names, newStay.guest.full_name];
+              return {
+                ...r,
+                active_stays: updatedStays,
+                current_guest_names: updatedGuestNames,
+                current_occupancy: updatedStays.length,
+                status: (newStatus as RoomStatus) || (updatedStays.length >= r.capacity ? 'occupied' : 'partially_occupied'),
+                updated_at: new Date().toISOString(),
+              };
+            }
+            return r;
+          });
+
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(next));
+            } catch (e) {}
+          }
+          return next;
+        });
+
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: err?.message || 'Network error while adding guest' };
+      }
+    },
+    [rooms]
+  );
+
+  // Update Guest: persist to Supabase /api/stays and update local state
+  const updateGuestStay = useCallback(
+    async (
+      stayId: string,
+      updates: {
+        fullName?: string;
+        phone?: string;
+        checkIn?: string;
+        expectedCheckout?: string;
+        notes?: string;
+      }
+    ) => {
+      try {
+        const res = await fetch('/api/stays', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            stayId,
+            fullName: updates.fullName,
+            phone: updates.phone,
+            checkIn: updates.checkIn,
+            expectedCheckout: updates.expectedCheckout,
+            notes: updates.notes,
+          }),
+        });
+
+        const json = await res.json();
+        if (!json.success) {
+          return { success: false, error: json.error || 'Failed to update guest' };
+        }
+
+        const updatedStay = json.stay;
+
+        // Update local state
+        setRooms((prev) => {
+          const next = prev.map((r) => {
+            if (r.active_stays?.some((s) => s.id === stayId)) {
+              const updatedStays = r.active_stays.map((s) => (s.id === stayId ? updatedStay : s));
+              const updatedGuestNames = updatedStays.map((s) => s.guest?.full_name).filter(Boolean);
+              return {
+                ...r,
+                active_stays: updatedStays,
+                current_guest_names: updatedGuestNames,
+                updated_at: new Date().toISOString(),
+              };
+            }
+            return r;
+          });
+
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(next));
+            } catch (e) {}
+          }
+          return next;
+        });
+
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: err?.message || 'Network error while updating guest' };
+      }
+    },
+    []
+  );
+
+  // Remove Guest / Check Out: persist to Supabase /api/stays and update local state
+  const removeGuestFromRoom = useCallback(
+    async (stayId: string, roomId: string) => {
+      try {
+        const res = await fetch(`/api/stays?stayId=${encodeURIComponent(stayId)}`, {
+          method: 'DELETE',
+        });
+
+        const json = await res.json();
+        if (!json.success) {
+          return { success: false, error: json.error || 'Failed to check out guest' };
+        }
+
+        const newStatus = json.roomStatus;
+
+        // Update local state
+        setRooms((prev) => {
+          const next = prev.map((r) => {
+            if (r.id === roomId || r.room_number.toString() === roomId || (json.roomId && r.id === json.roomId)) {
+              const updatedStays = (r.active_stays || []).filter((s) => s.id !== stayId);
+              const updatedGuestNames = updatedStays.map((s) => s.guest?.full_name).filter(Boolean);
+              return {
+                ...r,
+                active_stays: updatedStays,
+                current_guest_names: updatedGuestNames,
+                current_occupancy: updatedStays.length,
+                status:
+                  (newStatus as RoomStatus) ||
+                  (updatedStays.length === 0
+                    ? 'vacant'
+                    : updatedStays.length >= r.capacity
+                    ? 'occupied'
+                    : 'partially_occupied'),
+                updated_at: new Date().toISOString(),
+              };
+            }
+            return r;
+          });
+
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(next));
+            } catch (e) {}
+          }
+          return next;
+        });
+
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: err?.message || 'Network error while removing guest' };
+      }
+    },
+    []
+  );
+
+  // Vacate Room: persist to Supabase /api/stays/vacate and update local state
+  const vacateRoom = useCallback(
+    async (roomId: string) => {
+      try {
+        const targetRoom = rooms.find(
+          (r) => r.id === roomId || r.room_number.toString() === roomId
+        );
+
+        const res = await fetch('/api/stays/vacate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            roomId,
+            roomNumber: targetRoom?.room_number,
+          }),
+        });
+
+        const json = await res.json();
+        if (!json.success) {
+          return { success: false, error: json.error || 'Failed to vacate room' };
+        }
+
+        // Update local state
+        setRooms((prev) => {
+          const next = prev.map((r) => {
+            if (r.id === roomId || r.room_number.toString() === roomId || (json.roomId && r.id === json.roomId)) {
+              return {
+                ...r,
+                active_stays: [],
+                current_guest_names: [],
+                current_occupancy: 0,
+                status: 'vacant' as RoomStatus,
+                updated_at: new Date().toISOString(),
+              };
+            }
+            return r;
+          });
+
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(next));
+            } catch (e) {}
+          }
+          return next;
+        });
+
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: err?.message || 'Network error while vacating room' };
+      }
+    },
+    [rooms]
+  );
+
   // Reset to default seed
   const resetRooms = useCallback(() => {
     setRooms(DEMO_ROOMS);
@@ -162,6 +432,10 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
         updateRoom,
         resetRooms,
         refreshRooms: initData,
+        addGuestToRoom,
+        updateGuestStay,
+        removeGuestFromRoom,
+        vacateRoom,
         stats,
       }}
     >
