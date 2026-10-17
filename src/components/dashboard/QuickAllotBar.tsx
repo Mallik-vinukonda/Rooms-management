@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Zap, Clock, Snowflake, BedDouble, CheckCircle, ChevronRight, AlertCircle } from 'lucide-react';
+import Link from 'next/link';
+import { Zap, Clock, Snowflake, BedDouble, CheckCircle, ChevronRight, AlertCircle, CalendarClock } from 'lucide-react';
 import type { RoomWithOccupancy } from '@/types';
 import { getNextAvailableSummary } from '@/lib/checkout-utils';
 
@@ -113,6 +114,17 @@ export default function QuickAllotBar({ rooms, onRoomSelect }: QuickAllotBarProp
               <span className="font-bold">{summary.overdueCheckouts.length} Overdue</span>
             </div>
           )}
+
+          {/* 5. Pre-Book Advance Shortcut */}
+          <Link
+            href="/reservations"
+            className="flex items-center gap-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/40 rounded-lg px-2.5 py-1.5 font-semibold transition-colors shadow-sm ml-auto lg:ml-0"
+            title="Pre-book room in advance with date availability checker"
+          >
+            <CalendarClock size={13} className="text-amber-300" />
+            <span>Pre-Book Advance</span>
+            <ChevronRight size={12} className="opacity-70" />
+          </Link>
         </div>
       </div>
     </div>

@@ -27,6 +27,7 @@ export type ReservationStatus =
   | 'pending_review'
   | 'approved'
   | 'assigned'
+  | 'confirmed'
   | 'rejected'
   | 'completed'
   | 'cancelled';

@@ -130,8 +130,16 @@ export default function RoomCard({ room, onClick, compact = false }: RoomCardPro
     return <Sparkles size={11} className="text-violet-500" />;
   };
 
+  const isCleaningRequired = room.cleaning_status === 'cleaning_required' || room.status === 'cleaning';
+  const effectiveStatusColor = isCleaningRequired && room.current_occupancy === 0
+    ? '#8b5cf6'
+    : (statusColorVars[room.status] || '#78716c');
+
   // Status icon
   const StatusIcon = () => {
+    if (isCleaningRequired && room.current_occupancy === 0) {
+      return <Sparkles size={12} className="text-violet-600" />;
+    }
     switch (room.status) {
       case 'vacant': return <CheckCircle size={12} className={statusConf.color} />;
       case 'occupied': return <User size={12} className={statusConf.color} />;
@@ -150,17 +158,23 @@ export default function RoomCard({ room, onClick, compact = false }: RoomCardPro
       <RoomHoverCard room={room}>
         <button
           onClick={() => onClick?.(room)}
-          className="room-card flex flex-col gap-1 min-w-[80px] transition-all hover:scale-[1.02]"
-          style={{ '--room-status-color': statusColorVars[room.status] } as React.CSSProperties}
+          className={`room-card flex flex-col gap-1 min-w-[80px] transition-all hover:scale-[1.02] ${
+            isCleaningRequired && room.current_occupancy === 0 ? 'bg-violet-50/30' : ''
+          }`}
+          style={{ '--room-status-color': effectiveStatusColor } as React.CSSProperties}
         >
           <div className="flex items-center justify-between pl-2">
             <div className="flex items-center gap-1">
               <span className="text-xs font-bold text-gray-800">{room.room_number}</span>
-              {room.room_type === 'dormitory' && (
+              {room.room_type === 'dormitory' ? (
                 <span className="text-[9px] font-bold px-1 rounded bg-indigo-100 text-indigo-700 leading-tight">
                   DORM
                 </span>
-              )}
+              ) : isCleaningRequired && room.current_occupancy === 0 ? (
+                <span className="text-[9px] font-bold px-1 rounded bg-violet-100 text-violet-700 leading-tight">
+                  CLEAN
+                </span>
+              ) : null}
             </div>
             <StatusIcon />
           </div>
@@ -181,14 +195,21 @@ export default function RoomCard({ room, onClick, compact = false }: RoomCardPro
     <RoomHoverCard room={room}>
       <button
         onClick={() => onClick?.(room)}
-        className="room-card flex flex-col gap-1.5 w-full text-left transition-all hover:shadow-md"
-        style={{ '--room-status-color': statusColorVars[room.status] } as React.CSSProperties}
+        className={`room-card flex flex-col gap-1.5 w-full text-left transition-all hover:shadow-md ${
+          isCleaningRequired && room.current_occupancy === 0 ? 'bg-violet-50/20 border-violet-200' : ''
+        }`}
+        style={{ '--room-status-color': effectiveStatusColor } as React.CSSProperties}
       >
         {/* Header */}
         <div className="flex items-center justify-between pl-2">
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-gray-800">{room.room_number}</span>
-            {room.room_type === 'dormitory' ? (
+            {isCleaningRequired && room.current_occupancy === 0 ? (
+              <span className="badge bg-violet-100 text-violet-800 border border-violet-200 flex items-center gap-1 font-semibold">
+                <Sparkles size={11} className="text-violet-600" />
+                Cleaning Req.
+              </span>
+            ) : room.room_type === 'dormitory' ? (
               <span className="badge bg-indigo-100 text-indigo-800 border border-indigo-200">
                 Dormitory
               </span>

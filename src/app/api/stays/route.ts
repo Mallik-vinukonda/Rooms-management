@@ -333,17 +333,27 @@ export async function DELETE(request: Request) {
       .single();
 
     let newStatus = room?.status || 'vacant';
+    let newCleaningStatus: string | undefined = undefined;
     if (count === 0) {
       newStatus = 'vacant';
+      newCleaningStatus = 'cleaning_required';
     } else if (room && count >= room.capacity) {
       newStatus = 'occupied';
     } else {
       newStatus = 'partially_occupied';
     }
 
+    const roomUpdates: Record<string, any> = {
+      status: newStatus,
+      updated_at: new Date().toISOString(),
+    };
+    if (newCleaningStatus) {
+      roomUpdates.cleaning_status = newCleaningStatus;
+    }
+
     await supabase
       .from('rooms')
-      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .update(roomUpdates)
       .eq('id', existingStay.room_id);
 
     return NextResponse.json({
@@ -351,6 +361,7 @@ export async function DELETE(request: Request) {
       roomId: existingStay.room_id,
       remainingCount: count,
       roomStatus: newStatus,
+      cleaningStatus: newCleaningStatus,
     });
   } catch (err: any) {
     return NextResponse.json(

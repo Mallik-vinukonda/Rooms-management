@@ -13,7 +13,7 @@ import { useRooms } from '@/context/RoomContext';
 import type { RoomWithOccupancy } from '@/types';
 
 export default function DashboardPage() {
-  const { rooms, stats: currentStats, updateRoom } = useRooms();
+  const { rooms, stats: currentStats, reservations, updateRoom } = useRooms();
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -43,7 +43,7 @@ export default function DashboardPage() {
           <DashboardStatsCards stats={currentStats} onFilterClick={handleFilterClick} />
 
           {/* Attention Alerts */}
-          <AttentionAlerts stats={currentStats} rooms={rooms} />
+          <AttentionAlerts stats={currentStats} rooms={rooms} reservations={reservations} />
 
           {/* Next Available Quick Allot Assistant */}
           <QuickAllotBar rooms={rooms} onRoomSelect={handleRoomClick} />

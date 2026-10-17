@@ -53,11 +53,12 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Mark room as vacant
+    // 3. Mark room as vacant and cleaning_required
     const { error: updateRoomError } = await supabase
       .from('rooms')
       .update({
         status: 'vacant',
+        cleaning_status: 'cleaning_required',
         updated_at: new Date().toISOString(),
       })
       .eq('id', room.id);

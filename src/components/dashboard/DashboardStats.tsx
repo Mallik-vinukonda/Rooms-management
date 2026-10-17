@@ -13,7 +13,7 @@ import {
   BarChart3,
   Clock,
 } from 'lucide-react';
-import type { DashboardStats, RoomWithOccupancy } from '@/types';
+import type { DashboardStats, RoomWithOccupancy, Reservation } from '@/types';
 import { getStayCheckoutDetails } from '@/lib/checkout-utils';
 
 interface DashboardStatsProps {
@@ -120,9 +120,10 @@ export default function DashboardStatsCards({ stats, onFilterClick }: DashboardS
 interface AttentionAlertsProps {
   stats: DashboardStats;
   rooms: { room_number: number; status: string; has_ac: boolean; ac_status: string; cleaning_status: string; current_occupancy: number; capacity: number }[];
+  reservations?: Reservation[];
 }
 
-export function AttentionAlerts({ stats, rooms }: AttentionAlertsProps) {
+export function AttentionAlerts({ stats, rooms, reservations }: AttentionAlertsProps) {
   const alerts: { icon: React.ReactNode; message: string; color: string; borderColor: string; bgColor: string }[] = [];
 
   const acIssues = stats.total_ac_rooms - stats.ac_working;
@@ -165,6 +166,26 @@ export function AttentionAlerts({ stats, rooms }: AttentionAlertsProps) {
       borderColor: 'border-orange-200',
       bgColor: 'bg-orange-50',
     });
+  }
+
+  // Advance Bookings arriving today alert
+  if (reservations && reservations.length > 0) {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const arrivingToday = reservations.filter((r) => {
+      if (r.status !== 'confirmed' && r.status !== 'approved' && r.status !== 'assigned') return false;
+      const start = (r.reservation_start || r.expected_checkin || '').split('T')[0];
+      return start === todayStr;
+    });
+
+    if (arrivingToday.length > 0) {
+      alerts.push({
+        icon: <CalendarClock size={16} />,
+        message: `${arrivingToday.length} advance booking${arrivingToday.length > 1 ? 's' : ''} arriving today (${arrivingToday.map(r => `${r.guest_name}${r.room ? ` - Room ${r.room.room_number}` : ''}`).join(', ')})`,
+        color: 'text-indigo-800',
+        borderColor: 'border-indigo-300',
+        bgColor: 'bg-indigo-50',
+      });
+    }
   }
 
   // Departures today alert
